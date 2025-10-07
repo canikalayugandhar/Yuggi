@@ -692,7 +692,15 @@ function App() {
               {/* Trading Settings */}
               <Card className="lg:col-span-2">
                 <CardHeader>
-                  <CardTitle>Trading Settings</CardTitle>
+                  <CardTitle className="flex items-center justify-between">
+                    <span>Trading Settings</span>
+                    {saveStatus === 'saved' && (
+                      <Badge variant="default" className="bg-green-500 text-white">
+                        <CheckCircle2 className="w-3 h-3 mr-1" />
+                        Configuration Saved
+                      </Badge>
+                    )}
+                  </CardTitle>
                   <CardDescription>Configure trading parameters and expiry dates</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
