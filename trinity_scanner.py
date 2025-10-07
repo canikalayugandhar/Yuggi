@@ -705,12 +705,26 @@ def options_rows_to_signals(kite, rows, sl_pct: float = 0.1, tp_pct: float = 0.1
 
 def _within_market_hours(now_dt: dt.datetime) -> bool:
     """Check if given datetime is within market hours (9:15 AM - 3:30 PM IST)"""
-    local = now_dt.astimezone(IST)
-    t = local.time().replace(tzinfo=None)
-    # Market hours: 9:15 AM to 3:30 PM IST
+    if not now_dt:
+        return False
+    
+    # Ensure we have IST timezone
+    if now_dt.tzinfo is None:
+        local = now_dt.replace(tzinfo=IST)
+    else:
+        local = now_dt.astimezone(IST)
+    
+    # Get time component
+    t = local.time()
+    
+    # Market hours: 9:15 AM to 3:30 PM IST (Monday-Friday)
     market_start = dt.time(9, 15)  # 9:15 AM
     market_end = dt.time(15, 30)   # 3:30 PM
-    return market_start <= t <= market_end
+    
+    # Check if it's a weekday (0=Monday, 6=Sunday)
+    is_weekday = local.weekday() < 5
+    
+    return is_weekday and market_start <= t <= market_end
 
 
 def _place_market_buy_order(kite, tradingsymbol: str, quantity: int) -> Optional[dict]:
