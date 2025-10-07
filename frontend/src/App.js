@@ -526,7 +526,7 @@ function App() {
             <div className="flex items-center justify-between">
               <div className="text-left">
                 <div className="text-lg font-semibold text-gray-800">
-                  {new Date().toLocaleDateString('en-IN', {
+                  {currentTime.toLocaleDateString('en-IN', {
                     timeZone: 'Asia/Kolkata',
                     weekday: 'long',
                     year: 'numeric', 
@@ -535,7 +535,7 @@ function App() {
                   })}
                 </div>
                 <div className="text-md font-mono text-gray-600">
-                  {new Date().toLocaleTimeString('en-IN', {
+                  {currentTime.toLocaleTimeString('en-IN', {
                     timeZone: 'Asia/Kolkata',
                     hour12: false,
                     hour: '2-digit',
