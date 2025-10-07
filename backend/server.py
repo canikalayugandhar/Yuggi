@@ -298,13 +298,22 @@ async def run_scanner_loop():
                 for r in rows
             ]
 
-            # Generate signals
+            # Generate signals based on intrabar setting
             if config.get("mode") == "live" or not config.get("mode"):
+                allow_intrabar = config.get("allow_intrabar", False)
+                
+                if allow_intrabar:
+                    # Intrabar analysis: Generate signals immediately when POI is hit
+                    logging.info("🔥 INTRABAR MODE: Generating signals immediately at POI levels")
+                else:
+                    # Wait for candle close before generating signals
+                    logging.info("📊 CANDLE CLOSE MODE: Waiting for 15-minute candle close")
+                
                 signals = options_rows_to_signals(
                     kite, rows,
                     sl_pct=config.get("sl_pct", 0.1),
                     tp_pct=config.get("tp_pct", 0.1),
-                    allow_intrabar=config.get("allow_intrabar", False)
+                    allow_intrabar=allow_intrabar
                 )
                 
                 # Process new signals
