@@ -38,7 +38,8 @@ function App() {
     tp_pct: 0.1,
     allow_intrabar: false,
     mode: "live",
-    underlyings: []
+    underlyings: [],
+    only_expiry_dates: []
   });
   
   const [scannerStatus, setScannerStatus] = useState({
