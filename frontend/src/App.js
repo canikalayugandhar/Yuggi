@@ -22,8 +22,8 @@ const API = `${BACKEND_URL}/api`;
 
 function App() {
   const [config, setConfig] = useState({
-    api_key: "",
-    api_secret: "",
+    api_key: "jdhb0gprnxjr1k31",
+    api_secret: "4qnsimdyhlrgm3tqk7toiosu8u2i9wsg",
     access_token: "",
     real_trading: false,
     telegram_enabled: false,
