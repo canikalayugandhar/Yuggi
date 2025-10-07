@@ -373,8 +373,18 @@ function App() {
               {/* Recent Signals */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Recent Signals</CardTitle>
-                  <CardDescription>Latest trading signals generated</CardDescription>
+                  <CardTitle className="flex items-center space-x-2">
+                    <span>Recent Signals</span>
+                    {scannerStatus.is_running && (
+                      <div className="flex items-center space-x-1 ml-2">
+                        <div className="w-2 h-2 bg-red-500 rounded-full animate-ping"></div>
+                        <span className="text-xs text-red-600 font-bold">LIVE</span>
+                      </div>
+                    )}
+                  </CardTitle>
+                  <CardDescription>
+                    Latest trading signals • {config.allow_intrabar ? '🔥 Intrabar Mode' : '📊 Candle Close Mode'}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
