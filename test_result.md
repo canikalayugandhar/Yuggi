@@ -101,3 +101,50 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "Fix critical signal timing issues - signals showing incorrect times (04:45 AM, 06:45 AM) outside market hours instead of proper IST market hours (9:15 AM - 3:30 PM)"
+
+backend:
+  - task: "Signal Timing Validation"
+    implemented: true
+    working: false
+    file: "trinity_scanner.py"
+    stuck_count: 3
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "User reports signals showing at 04:45 AM, 06:45 AM outside market hours - critical bug"
+
+frontend:
+  - task: "DateTime Display Formatting"
+    implemented: true
+    working: false
+    file: "App.js"
+    stuck_count: 2
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "Frontend showing wrong signal times, timezone conversion issue"
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Signal Timing Validation"
+    - "DateTime Display Formatting"
+  stuck_tasks:
+    - "Signal Timing Validation"
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "main"
+    message: "Identified critical timing bug - signals showing outside market hours. Need to fix timezone handling and market hours validation in both backend and frontend"
