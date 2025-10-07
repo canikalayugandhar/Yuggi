@@ -444,23 +444,41 @@ def find_poi_from_inducement(candles, inducement, lookback=POI_LOOKBACK):
     return {"index": sel_idx, "price": sel_low, "low": sel_low}
 
 
-def simulate_outcome(candles, entry_idx, entry_price, tp_price, sl_price, lookahead=ENTRY_LOOKAHEAD):
+def simulate_outcome(candles, entry_idx, entry_price, tp_price, sl_price, signal_time=None, lookahead=ENTRY_LOOKAHEAD):
+    """
+    Simulate outcome ensuring TP/SL hits occur AFTER signal time.
+    Critical fix: TP/SL should only count if hit after signal generation time.
+    """
     n = len(candles)
     start = entry_idx + 1
     end = min(n, start + lookahead)
+    
+    # Parse signal time to ensure we only count hits after signal was generated
+    signal_dt = None
+    if signal_time:
+        signal_dt = _parse_to_dtobj(signal_time)
+    
     for i in range(start, end):
         hi = candles[i]["high"]
         lo = candles[i]["low"]
         ts = candles[i].get("date")
-        hit_tp = hi >= tp_price
+        candle_dt = _parse_to_dtobj(ts)
+        
+        # 🎯 CRITICAL FIX: Only count hits if candle time is AFTER signal time
+        if signal_dt and candle_dt and candle_dt <= signal_dt:
+            continue  # Skip candles that occurred before/at signal time
+        
+        hit_tp = hi >= tp_price if tp_price else False
         hit_sl = lo <= sl_price
+        
         if hit_tp and not hit_sl:
             return {"result": "WIN", "hit_index": i, "hit_time": ts, "hit_price": tp_price}
         if hit_sl and not hit_tp:
             return {"result": "LOSS", "hit_index": i, "hit_time": ts, "hit_price": sl_price}
         if hit_tp and hit_sl:
             return {"result": "BOTH", "hit_index": i, "hit_time": ts, "hit_price": tp_price}
-    return {"result": "NO_HIT", "hit_index": None, "hit_time": None, "hit_price": None}
+    
+    return {"result": "PENDING", "hit_index": None, "hit_time": None, "hit_price": None}
 
 
 def run_ymc_scan_on_candles(candles, min_candles_required: Optional[int] = None, sl_pct: float = 0.1, tp_pct: float = 0.1, allow_intrabar: bool = False, live_ltp: Optional[float] = None):
