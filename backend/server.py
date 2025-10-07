@@ -210,6 +210,9 @@ async def monitor_signal_outcomes():
                                     mem_signal["outcome"] = new_outcome
                                     mem_signal["exit_price"] = hit_price
                             
+                            # 🎯 CRITICAL: Recalculate stats immediately after outcome update
+                            updated_stats = await calculate_real_stats()
+                            
                             # Broadcast outcome update via WebSocket
                             await broadcast_message({
                                 "type": "outcome_update",
@@ -219,6 +222,16 @@ async def monitor_signal_outcomes():
                                     "outcome": new_outcome,
                                     "exit_price": hit_price,
                                     "current_price": current_price,
+                                    "timestamp": _now_ist().isoformat(),
+                                    "updated_stats": updated_stats  # Include updated stats
+                                }
+                            })
+                            
+                            # Also broadcast stats update separately
+                            await broadcast_message({
+                                "type": "stats_update",
+                                "data": {
+                                    "stats": updated_stats,
                                     "timestamp": _now_ist().isoformat()
                                 }
                             })
