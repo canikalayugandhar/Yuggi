@@ -379,7 +379,10 @@ async def run_scanner_loop():
                             "mode": "INTRABAR" if config.get("allow_intrabar", False) else "CANDLE_CLOSE"
                         }
                     })
-                    logging.info(f"🚀 LIVE SIGNAL: {signal_data['underlying']} {signal_data['contract']} @ ₹{signal_data['entry_price']}")
+                    
+                    # Debug log for timing validation
+                    signal_time_str = signal_data['signal_time'].strftime("%Y-%m-%d %H:%M:%S IST") if hasattr(signal_data['signal_time'], 'strftime') else str(signal_data['signal_time'])
+                    logging.info(f"🚀 LIVE SIGNAL: {signal_data['underlying']} {signal_data['contract']} @ ₹{signal_data['entry_price']} | Time: {signal_time_str}")
 
                     # Send Telegram notification if enabled
                     if config.get("telegram_enabled") and config.get("telegram_bot_token") and config.get("telegram_chat_id"):
