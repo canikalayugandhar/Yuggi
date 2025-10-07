@@ -7,7 +7,7 @@ import { Calendar, X, Plus } from "lucide-react";
 
 const ExpiryDateSelector = ({ value = [], onChange, ...props }) => {
   const [newDate, setNewDate] = useState('');
-  const [suggestedDates, setSuggestedDates] = useState([]);
+  // Removed suggested dates state
 
   // Removed suggested dates generation as requested
 
