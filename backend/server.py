@@ -137,6 +137,111 @@ async def broadcast_message(message: dict):
             active_connections.remove(connection)
 
 # Background scanner task
+async def monitor_signal_outcomes():
+    """Monitor live price movements to update signal outcomes in real-time"""
+    while scanner_state["is_running"]:
+        try:
+            if not scanner_state["kite_session"]:
+                await asyncio.sleep(10)
+                continue
+            
+            kite = scanner_state["kite_session"]
+            
+            # Get all PENDING signals from database
+            pending_signals = await db.signals.find({"outcome": "PENDING"}).to_list(None)
+            
+            if not pending_signals:
+                await asyncio.sleep(10)
+                continue
+            
+            # Check each pending signal
+            updated_count = 0
+            for signal in pending_signals:
+                try:
+                    contract = signal.get("contract", "")
+                    if not contract:
+                        continue
+                    
+                    # Get current market price
+                    qkey = f"NFO:{contract}"
+                    try:
+                        q = kite.quote([qkey]).get(qkey)
+                        if not q or not isinstance(q.get("last_price"), (int, float)):
+                            continue
+                        
+                        current_price = q.get("last_price")
+                        entry_price = signal.get("entry_price")
+                        sl_price = signal.get("sl")
+                        tp_price = signal.get("tp")
+                        
+                        if not all([current_price, entry_price, sl_price, tp_price]):
+                            continue
+                        
+                        # Check if SL or TP hit
+                        new_outcome = None
+                        hit_price = None
+                        
+                        if current_price <= sl_price:
+                            new_outcome = "LOSS"
+                            hit_price = sl_price
+                            logging.info(f"🔴 LOSS: {signal.get('underlying')} {contract} hit SL at ₹{current_price}")
+                        elif current_price >= tp_price:
+                            new_outcome = "WIN" 
+                            hit_price = tp_price
+                            logging.info(f"🟢 WIN: {signal.get('underlying')} {contract} hit TP at ₹{current_price}")
+                        
+                        if new_outcome:
+                            # Update signal in database
+                            await db.signals.update_one(
+                                {"_id": signal["_id"]},
+                                {
+                                    "$set": {
+                                        "outcome": new_outcome,
+                                        "hit_time": _now_ist(),
+                                        "exit_price": hit_price
+                                    }
+                                }
+                            )
+                            
+                            # Update in-memory signals
+                            for mem_signal in scanner_state.get("last_signals", []):
+                                if (mem_signal.get("contract") == contract and 
+                                    mem_signal.get("entry_price") == entry_price):
+                                    mem_signal["outcome"] = new_outcome
+                                    mem_signal["exit_price"] = hit_price
+                            
+                            # Broadcast outcome update via WebSocket
+                            await broadcast_message({
+                                "type": "outcome_update",
+                                "data": {
+                                    "contract": contract,
+                                    "underlying": signal.get("underlying"),
+                                    "outcome": new_outcome,
+                                    "exit_price": hit_price,
+                                    "current_price": current_price,
+                                    "timestamp": _now_ist().isoformat()
+                                }
+                            })
+                            
+                            updated_count += 1
+                    
+                    except Exception as e:
+                        logging.error(f"Error monitoring signal {contract}: {e}")
+                        continue
+                
+                except Exception as e:
+                    logging.error(f"Error processing signal: {e}")
+                    continue
+            
+            if updated_count > 0:
+                logging.info(f"📊 Updated {updated_count} signal outcomes")
+            
+            await asyncio.sleep(5)  # Check every 5 seconds
+            
+        except Exception as e:
+            logging.error(f"Outcome monitoring error: {e}")
+            await asyncio.sleep(10)
+
 async def run_scanner_loop():
     """Main scanner loop that runs in the background"""
     while scanner_state["is_running"]:
