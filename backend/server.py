@@ -508,6 +508,43 @@ async def stop_scanner():
     scanner_state["kite_session"] = None
     return {"message": "Scanner stopped successfully"}
 
+@api_router.post("/scanner/cleanup")
+async def cleanup_invalid_signals():
+    """Clean up signals with invalid timestamps (outside market hours)"""
+    try:
+        IST_TZ = pytz.timezone('Asia/Kolkata')
+        
+        # Get all signals from database
+        all_signals = await db.signals.find().to_list(None)
+        
+        invalid_count = 0
+        for signal in all_signals:
+            signal_time = signal.get("signal_time")
+            if not signal_time:
+                continue
+                
+            # Convert to datetime if string
+            if isinstance(signal_time, str):
+                try:
+                    signal_dt = dt.datetime.fromisoformat(signal_time.replace('Z', '+00:00'))
+                except:
+                    continue
+            else:
+                signal_dt = signal_time
+            
+            # Check if signal is outside market hours
+            if not _within_market_hours(signal_dt):
+                # Delete invalid signal
+                await db.signals.delete_one({"_id": signal["_id"]})
+                invalid_count += 1
+                logging.info(f"🗑️ DELETED invalid signal: {signal.get('underlying')} at {signal_dt}")
+        
+        return {"message": f"Cleanup complete. Removed {invalid_count} invalid signals."}
+    
+    except Exception as e:
+        logging.error(f"Cleanup error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 async def calculate_real_stats():
     """Calculate statistics from actual database signals"""
     try:
