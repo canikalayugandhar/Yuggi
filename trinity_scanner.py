@@ -702,7 +702,7 @@ def options_rows_to_signals(kite, rows, sl_pct: float = 0.1, tp_pct: float = 0.1
                         candles = _append_intrabar_candle(candles, live_ltp, live_ts)
                 except Exception:
                     pass
-            smc_signals = run_ymc_scan_on_candles(candles, min_candles_required=MIN_CANDLES, sl_pct=sl_pct, tp_pct=tp_pct, allow_intrabar=allow_intrabar)
+            smc_signals = run_ymc_scan_on_candles(candles, min_candles_required=MIN_CANDLES, sl_pct=sl_pct, tp_pct=tp_pct, allow_intrabar=allow_intrabar, live_ltp=live_ltp)
             filtered = []
             for s in smc_signals:
                 try:
