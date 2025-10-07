@@ -520,36 +520,38 @@ function App() {
               </Card>
 
               {/* Trading Settings */}
-              <Card>
+              <Card className="lg:col-span-2">
                 <CardHeader>
                   <CardTitle>Trading Settings</CardTitle>
-                  <CardDescription>Configure trading parameters</CardDescription>
+                  <CardDescription>Configure trading parameters and expiry dates</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label htmlFor="mode">Mode</Label>
-                    <Select value={config.mode} onValueChange={(value) => setConfig(prev => ({ ...prev, mode: value }))}>
-                      <SelectTrigger data-testid="mode-select">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="live">Live Trading</SelectItem>
-                        <SelectItem value="backtest">Backtest</SelectItem>
-                      </SelectContent>
-                    </Select>
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <div>
+                      <Label htmlFor="mode">Mode</Label>
+                      <Select value={config.mode} onValueChange={(value) => setConfig(prev => ({ ...prev, mode: value }))}>
+                        <SelectTrigger data-testid="mode-select">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="live">Live Trading</SelectItem>
+                          <SelectItem value="backtest">Backtest</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2 lg:col-span-2 lg:justify-start lg:pt-7">
+                      <Switch
+                        id="real_trading"
+                        checked={config.real_trading}
+                        onCheckedChange={(checked) => setConfig(prev => ({ ...prev, real_trading: checked }))}
+                        data-testid="real-trading-switch"
+                      />
+                      <Label htmlFor="real_trading">Enable Real Trading</Label>
+                    </div>
                   </div>
                   
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="real_trading"
-                      checked={config.real_trading}
-                      onCheckedChange={(checked) => setConfig(prev => ({ ...prev, real_trading: checked }))}
-                      data-testid="real-trading-switch"
-                    />
-                    <Label htmlFor="real_trading">Enable Real Trading</Label>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     <div>
                       <Label htmlFor="sl_pct">Stop Loss %</Label>
                       <Input
@@ -575,9 +577,7 @@ function App() {
                         data-testid="tp-pct-input"
                       />
                     </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
+                    
                     <div>
                       <Label htmlFor="min_volume">Min Volume</Label>
                       <Input
@@ -603,11 +603,13 @@ function App() {
                     </div>
                   </div>
                   
-                  <ExpiryDateSelector
-                    value={config.only_expiry_dates || []}
-                    onChange={(dates) => setConfig(prev => ({ ...prev, only_expiry_dates: dates }))}
-                    data-testid="expiry-date-selector"
-                  />
+                  <div className="border-t pt-4">
+                    <ExpiryDateSelector
+                      value={config.only_expiry_dates || []}
+                      onChange={(dates) => setConfig(prev => ({ ...prev, only_expiry_dates: dates }))}
+                      data-testid="expiry-date-selector"
+                    />
+                  </div>
                 </CardContent>
               </Card>
 
