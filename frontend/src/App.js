@@ -50,6 +50,31 @@ function App() {
     stats: { total: 0, hit: 0, flop: 0, pnl: 0.0 }
   });
   
+  // Simple stats calculation from signals
+  const calculateStatsFromSignals = (signalsList) => {
+    const total = signalsList.length;
+    const wins = signalsList.filter(s => s.outcome === 'WIN').length;
+    const losses = signalsList.filter(s => s.outcome === 'LOSS').length;
+    
+    // Simple P&L calculation: (exit_price - entry_price) * lot
+    let totalPnL = 0;
+    signalsList.forEach(signal => {
+      if (signal.outcome === 'WIN' || signal.outcome === 'LOSS') {
+        if (signal.exit_price && signal.entry_price && signal.lot) {
+          const pnl = (signal.exit_price - signal.entry_price) * signal.lot;
+          totalPnL += pnl;
+        }
+      }
+    });
+    
+    return {
+      total: total,
+      hit: wins,
+      flop: losses,
+      pnl: totalPnL
+    };
+  };
+  
   const [signals, setSignals] = useState([]);
   const [options, setOptions] = useState([]);
   const [loading, setLoading] = useState(false);
