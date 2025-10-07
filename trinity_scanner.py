@@ -502,11 +502,19 @@ def run_ymc_scan_on_candles(candles, min_candles_required: Optional[int] = None,
         except Exception:
             pass
 
-        # ===== Signal Generation: POI-based Entry (Original Trinity Logic) =====
+        # ===== Signal Generation: LIVE MARKET PRICE Entry =====
         SL_PCT = sl_pct / 100.0  # Convert percentage to decimal
         TP_PCT = tp_pct / 100.0  # Convert percentage to decimal
 
-        entry_price = round(poi["price"], 2)  # 🎯 SIGNAL AT POI PRICE
+        # 🎯 CRITICAL FIX: Use LIVE market price instead of historical POI price
+        # Get current market LTP for realistic entry price
+        if allow_intrabar and len(candles) > 0:
+            # Use live LTP from current candle (more accurate for real trading)
+            entry_price = round(candles[-1]["close"], 2)  # Current market price
+        else:
+            # Use close price of the POI candle (but validate it's realistic)
+            entry_price = round(candles[poi["index"]]["close"], 2)  # Actual available price
+        
         sl_price = round(entry_price * (1 - SL_PCT), 2)
         
         # 🎯 CORRECT TP LOGIC: TP based on Buy-Side Liquidity (BSL) as per original code
