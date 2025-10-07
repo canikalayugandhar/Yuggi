@@ -267,10 +267,17 @@ function App() {
 
   const loadCurrentOptions = async () => {
     try {
-      const response = await axios.get(`${API}/scanner/options`);
+      console.log('📋 Loading options from:', `${API}/scanner/options`);
+      const response = await axios.get(`${API}/scanner/options`, {
+        timeout: 15000 // 15 second timeout for options
+      });
+      
+      console.log('📋 Options response:', response.data?.length, 'options loaded');
       setOptions(response.data || []);
     } catch (error) {
       console.error("Failed to load options:", error);
+      // Set empty array on error to show empty state
+      setOptions([]);
     }
   };
 
