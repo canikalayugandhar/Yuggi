@@ -825,15 +825,24 @@ async def get_scanner_status():
         stats=real_stats
     )
 
-@api_router.get("/scanner/signals", response_model=List[Dict])
-async def get_recent_signals():
+@api_router.get("/scanner/signals")
+async def get_signals():
     """Get recent signals"""
     try:
+        # Get signals from database with proper error handling
         signals = await db.signals.find().sort("created_at", -1).limit(100).to_list(100)
-        # Convert ObjectId to string to avoid serialization errors
+        
+        if not signals:
+            logging.info("No signals found in database")
+            return []
+        
+        logging.info(f"Found {len(signals)} signals in database")
+        
+        # Convert ObjectId to string for JSON serialization  
         for signal in signals:
             if "_id" in signal:
-                signal["_id"] = str(signal["_id"])
+                del signal["_id"]
+            
             # Convert datetime objects to ISO strings with proper IST timezone
             IST_TZ = pytz.timezone('Asia/Kolkata')
             for field in ["signal_time", "created_at", "entry_time", "poi_time", "bos_time", "induc_time", "hit_time"]:
@@ -849,10 +858,12 @@ async def get_recent_signals():
                     elif isinstance(signal[field], str) and 'T' in signal[field]:
                         # Already ISO string, keep as is
                         continue
+        
         return signals
-    except Exception:
-        # Return in-memory signals if database fails
-        return scanner_state.get("last_signals", [])
+        
+    except Exception as e:
+        logging.error(f"Error getting signals: {e}")
+        return []
 
 @api_router.get("/scanner/options", response_model=List[Dict])
 async def get_current_options():
