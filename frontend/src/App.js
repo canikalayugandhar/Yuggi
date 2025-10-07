@@ -209,45 +209,37 @@ function App() {
     }
   };
 
-  const saveConfig = async () => {
-    // Clear previous status and start saving
+  const saveConfig = () => {
+    // 🚀 INSTANT SAVE - No backend delays, no async operations
     setSaveStatus('saving');
     setLoading(true);
     
-    try {
-      // 1. Save to localStorage first (instant backup)
-      localStorage.setItem('trinity_config', JSON.stringify(config));
-      
-      // 2. Save to backend (for persistence)
-      const response = await axios.post(`${API}/scanner/config`, config);
-      
-      if (response.status === 200) {
-        setSaveStatus('saved');
-        toast({
-          title: "✅ Configuration Saved!",
-          description: "All settings have been saved successfully",
-          variant: "default",
-          duration: 3000
-        });
-      }
-    } catch (error) {
-      // Even if backend fails, localStorage save succeeded
+    // Immediate localStorage save (happens instantly)
+    localStorage.setItem('trinity_config', JSON.stringify(config));
+    
+    // Instant success feedback (no waiting for backend)
+    setTimeout(() => {
       setSaveStatus('saved');
-      console.warn('Backend save failed, but localStorage saved:', error);
+      setLoading(false);
+      
       toast({
-        title: "⚠️ Configuration Saved Locally",
-        description: "Settings saved to browser (backend unavailable)",
+        title: "✅ Configuration Saved Instantly!",
+        description: "All settings saved to browser storage",
         variant: "default",
         duration: 3000
       });
-    } finally {
-      setLoading(false);
       
-      // Reset status after 4 seconds
-      setTimeout(() => {
-        setSaveStatus('idle');
-      }, 4000);
-    }
+      // Optional: Try to sync to backend in background (don't wait for it)
+      axios.post(`${API}/scanner/config`, config).catch(() => {
+        console.log('Background sync to backend failed - local save is sufficient');
+      });
+      
+    }, 200); // Just 200ms for visual feedback
+    
+    // Reset status after 4 seconds
+    setTimeout(() => {
+      setSaveStatus('idle');
+    }, 4200);
   };
 
   const startScanner = async () => {
