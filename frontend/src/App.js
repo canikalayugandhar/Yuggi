@@ -638,7 +638,15 @@ function App() {
               {/* API Configuration */}
               <Card>
                 <CardHeader>
-                  <CardTitle>API Configuration</CardTitle>
+                  <CardTitle className="flex items-center justify-between">
+                    <span>API Configuration</span>
+                    {saveStatus === 'saved' && (
+                      <Badge variant="default" className="bg-green-500 text-white">
+                        <CheckCircle2 className="w-3 h-3 mr-1" />
+                        Saved
+                      </Badge>
+                    )}
+                  </CardTitle>
                   <CardDescription>Kite Connect API credentials</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
