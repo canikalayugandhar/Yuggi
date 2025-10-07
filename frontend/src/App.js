@@ -134,7 +134,16 @@ function App() {
               duration: 7000
             });
             
+            // Update stats if included
+            if (outcomeData.updated_stats) {
+              setScannerStatus(prev => ({ ...prev, stats: outcomeData.updated_stats }));
+            }
+            
             console.log('🎯 OUTCOME UPDATE:', outcomeData);
+          } else if (data.type === 'stats_update') {
+            // 📊 REAL-TIME STATS UPDATE
+            setScannerStatus(prev => ({ ...prev, stats: data.data.stats }));
+            console.log('📊 STATS UPDATE:', data.data.stats);
           } else if (data.type === 'scanner_update') {
             // Update dashboard data
             if (data.data.signals) setSignals(prev => [...data.data.signals, ...prev]);
