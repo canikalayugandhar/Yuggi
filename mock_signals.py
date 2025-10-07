@@ -75,8 +75,10 @@ def create_mock_signals():
             "rr": rr,
             "lot": data["lot"],
             "outcome": data["outcome"],
-            "signal_time": signal_time,
-            "created_at": signal_time
+            "signal_time": signal_time.isoformat(),  # Convert to ISO string
+            "created_at": signal_time.isoformat()    # Convert to ISO string
         })
+        
+        print(f"DEBUG: {data['underlying']} signal at index {data['time_index']} -> {signal_time.strftime('%H:%M:%S')}")
     
     return signals
