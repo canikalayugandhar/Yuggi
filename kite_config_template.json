@@ -1,0 +1,17 @@
+{
+  "api_key": "jdhb0gprnxjr1k31",
+  "api_secret": "4qnsimdyhlrgm3tqk7toiosu8u2i9wsg",
+  "access_token": "",
+  "min_strike": 2000,
+  "min_volume": 1000,
+  "atm_range": 1,
+  "max_candidates": 100,
+  "sl_pct": 0.1,
+  "tp_pct": 0.1,
+  "allow_intrabar": false,
+  "telegram_enabled": false,
+  "telegram_bot_token": "",
+  "telegram_chat_id": "",
+  "underlyings": [],
+  "only_expiry_dates": []
+}
