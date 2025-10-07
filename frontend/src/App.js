@@ -258,10 +258,19 @@ function App() {
 
   const loadRecentSignals = async () => {
     try {
-      const response = await axios.get(`${API}/scanner/signals`);
+      console.log('🎯 Loading signals from:', `${API}/scanner/signals`);
+      const response = await axios.get(`${API}/scanner/signals`, {
+        timeout: 12000 // 12 second timeout for signals
+      });
+      
+      console.log('🎯 Signals response:', response.data?.length, 'signals loaded');
       setSignals(response.data || []);
     } catch (error) {
       console.error("Failed to load signals:", error);
+      // Keep existing signals on error
+      if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+        console.warn('Signals request timed out - keeping existing data');
+      }
     }
   };
 
