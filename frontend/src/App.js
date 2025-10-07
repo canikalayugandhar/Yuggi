@@ -265,13 +265,13 @@ function App() {
       
     }, 200); // Just 200ms for visual feedback
     
-    // Keep saved status longer when user stays on settings page
+    // Keep saved status much longer 
     setTimeout(() => {
       if (activeTab === 'settings') {
-        // Only reset if still on settings tab
+        // Only reset if still on settings tab after a long time
         setSaveStatus('idle');
       }
-    }, 10000); // 10 seconds instead of 4
+    }, 600000); // 10 minutes instead of 10 seconds
   };
 
   const startScanner = async () => {
