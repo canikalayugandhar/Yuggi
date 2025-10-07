@@ -372,9 +372,8 @@ async def run_scanner_loop():
                         except Exception as e:
                             logging.error(f"Order placement error: {e}")
 
-                # Update combined signals (keep existing + new)
-                all_signals = scanner_state.get("last_signals", []) + new_signals
-                scanner_state["last_signals"] = all_signals
+                # Store only new signals (avoid accumulating duplicates)
+                scanner_state["last_signals"] = new_signals
                 
                 scanner_state["error_message"] = None
 
