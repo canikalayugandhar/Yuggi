@@ -708,13 +708,18 @@ function App() {
                   <CardTitle className="flex items-center justify-between">
                     <span>API Configuration</span>
                     {saveStatus === 'saved' && (
-                      <Badge variant="default" className="bg-green-500 text-white">
+                      <Badge variant="default" className="bg-green-500 text-white animate-pulse">
                         <CheckCircle2 className="w-3 h-3 mr-1" />
-                        Saved
+                        Saved & Active
                       </Badge>
                     )}
                   </CardTitle>
-                  <CardDescription>Kite Connect API credentials</CardDescription>
+                  <CardDescription>
+                    Kite Connect API credentials
+                    {localStorage.getItem('trinity_config') && (
+                      <span className="text-green-600 text-xs ml-2">• Config loaded from storage</span>
+                    )}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
