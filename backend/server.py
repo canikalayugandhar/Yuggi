@@ -276,80 +276,10 @@ async def run_scanner_loop():
                     else:
                         # DEMO/MOCK MODE
                         scanner_state["error_message"] = "Demo mode: Using mock data (configure real API credentials for live trading)"
-                        # Generate mock signals for demo
-                        sys.path.append('/app')
-                        from mock_signals import create_mock_signals
-                        mock_signals = create_mock_signals()
-                        scanner_state["last_signals"] = mock_signals
-                        
-                        # Mock ATM options data - SHOW ALL UNDERLYINGS
-                        import random
-                        mock_options = []
-                        
-                        # ALL MAJOR INDICES AND STOCKS ATM options
-                        all_underlyings = [
-                            {"name": "NIFTY", "spot": 25000, "strikes": [24900, 24950, 25000, 25050, 25100], "lot": 50},
-                            {"name": "BANKNIFTY", "spot": 52000, "strikes": [51800, 51900, 52000, 52100, 52200], "lot": 25}, 
-                            {"name": "FINNIFTY", "spot": 23000, "strikes": [22800, 22900, 23000, 23100, 23200], "lot": 40},
-                            {"name": "MIDCPNIFTY", "spot": 12500, "strikes": [12400, 12450, 12500, 12550, 12600], "lot": 75},
-                            {"name": "RELIANCE", "spot": 2800, "strikes": [2750, 2800, 2850, 2900, 2950], "lot": 250},
-                            {"name": "TCS", "spot": 3600, "strikes": [3550, 3600, 3650, 3700, 3750], "lot": 125},
-                            {"name": "HDFC", "spot": 1650, "strikes": [1600, 1650, 1700, 1750, 1800], "lot": 400},
-                            {"name": "ICICIBANK", "spot": 1200, "strikes": [1150, 1200, 1250, 1300, 1350], "lot": 375}
-                        ]
-                        
-                        for underlying in all_underlyings:
-                            for strike in underlying["strikes"][:3]:  # Top 3 strikes per underlying
-                                for option_type in ["CE", "PE"]:
-                                    ltp = random.uniform(20, 300)
-                                    volume = random.randint(2000, 80000)
-                                    oi = random.randint(50000, 800000)
-                                    lot_size = underlying["lot"]
-                                    
-                                    mock_options.append({
-                                        "underlying": underlying["name"],
-                                        "symbol": f"{underlying['name']}25OCT{strike}{option_type}",
-                                        "strike": strike,
-                                        "type": option_type,
-                                        "expiry": "2025-10-25",
-                                        "ltp": round(ltp, 2),
-                                        "volume": volume,
-                                        "oi": oi,
-                                        "lot": lot_size,
-                                        "investment": round(ltp * lot_size, 2)
-                                    })
-                        
-                        # Sort by volume (high to low) for better display
-                        mock_options.sort(key=lambda x: x["volume"], reverse=True)
-                        # ATM OPTIONS: Show ALL contracts (mixed underlyings) in dashboard
-                        scanner_state["last_options"] = mock_options[:20]  # Show top 20 options
-                        
-                        # Filter signals based on underlyings setting
-                        underlyings_filter = config.get("underlyings", [])
-                        if underlyings_filter:
-                            # Only include signals for specified underlyings
-                            filtered_signals = []
-                            for signal in mock_signals:
-                                signal_underlying = signal.get("underlying", "").upper()
-                                if any(signal_underlying == uf.upper() for uf in underlyings_filter):
-                                    filtered_signals.append(signal)
-                            mock_signals = filtered_signals
-                            logging.info(f"🎯 Filtered to {len(mock_signals)} signals for underlyings: {underlyings_filter}")
-                        
-                        # Clear any existing signals to avoid duplicates
-                        await db.signals.delete_many({})
-                        
-                        # Insert fresh filtered signals
-                        if mock_signals:
-                            await db.signals.insert_many(mock_signals)
-                        
-                        # Update stats based on fresh data
-                        scanner_state["stats"] = {
-                            "total": len(mock_signals),
-                            "hit": len([s for s in mock_signals if s["outcome"] == "WIN"]),
-                            "flop": len([s for s in mock_signals if s["outcome"] == "LOSS"]),
-                            "pnl": sum([50.0 if s["outcome"] == "WIN" else -30.0 if s["outcome"] == "LOSS" else 0 for s in mock_signals])
-                        }
+                        # NO MOCK DATA - Only show message
+                        scanner_state["error_message"] = "No API credentials configured. Please add your Kite API credentials in Settings."
+                        scanner_state["last_signals"] = []
+                        scanner_state["stats"] = {"total": 0, "hit": 0, "flop": 0, "pnl": 0.0}
                         
                         # Broadcast mock updates
                         await broadcast_message({
