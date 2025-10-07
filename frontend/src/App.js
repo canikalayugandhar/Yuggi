@@ -177,23 +177,33 @@ function App() {
 
   const loadConfig = async () => {
     try {
-      // 1. First load from localStorage (instant)
+      // 1. First load from localStorage (instant and always preferred)
       const localConfig = localStorage.getItem('trinity_config');
       if (localConfig) {
         const parsedConfig = JSON.parse(localConfig);
         setConfig(prev => ({ ...prev, ...parsedConfig }));
         console.log('✅ Configuration loaded from localStorage');
+        
+        // Check if this config was recently saved
+        const savedTimestamp = localStorage.getItem('trinity_config_saved');
+        if (savedTimestamp) {
+          const timeDiff = Date.now() - parseInt(savedTimestamp);
+          if (timeDiff < 60000) { // Within 1 minute
+            console.log('📝 Recent config save detected');
+          }
+        }
+        return; // Use localStorage config, don't override with backend
       }
       
-      // 2. Then try to load from backend (fallback)
+      // 2. Only load from backend if no localStorage config exists
       const response = await axios.get(`${API}/scanner/config`);
       if (response.data && Object.keys(response.data).length > 0) {
         setConfig(prev => ({ ...prev, ...response.data }));
-        console.log('✅ Configuration loaded from backend');
+        console.log('✅ Configuration loaded from backend (fallback)');
       }
     } catch (error) {
       console.error("Failed to load config from backend:", error);
-      // localStorage config is still loaded if available
+      // This is fine - localStorage is our primary source
     }
   };
 
