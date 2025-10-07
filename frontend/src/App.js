@@ -79,7 +79,9 @@ function App() {
       }
     }
   }, [activeTab]);
-    
+
+  // WebSocket and polling setup
+  useEffect(() => {
     // 🚀 WebSocket connection for LIVE signals
     const connectWebSocket = () => {
       const wsUrl = BACKEND_URL.replace('https://', 'wss://').replace('http://', 'ws://') + '/api/scanner/ws';
