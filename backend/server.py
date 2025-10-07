@@ -346,7 +346,38 @@ async def run_scanner_loop():
                         except Exception as e:
                             logging.error(f"Order placement error: {e}")
 
-                scanner_state["last_signals"] = new_signals
+                # Update combined signals (keep existing + new)
+                all_signals = scanner_state.get("last_signals", []) + new_signals
+                scanner_state["last_signals"] = all_signals
+                
+                # Calculate updated statistics from all signals
+                total_signals = len(all_signals)
+                winning_signals = len([s for s in all_signals if s.get("outcome") == "WIN"])
+                losing_signals = len([s for s in all_signals if s.get("outcome") == "LOSS"])
+                
+                # Calculate P&L based on outcomes and lot sizes
+                total_pnl = 0.0
+                for s in all_signals:
+                    outcome = s.get("outcome", "")
+                    lot = s.get("lot", 1)
+                    entry_price = s.get("entry_price", 0)
+                    tp = s.get("tp", 0)
+                    sl = s.get("sl", 0)
+                    
+                    if outcome == "WIN" and tp and entry_price:
+                        pnl = (tp - entry_price) * lot
+                        total_pnl += pnl
+                    elif outcome == "LOSS" and sl and entry_price:
+                        pnl = (sl - entry_price) * lot  # This will be negative
+                        total_pnl += pnl
+                
+                scanner_state["stats"] = {
+                    "total": total_signals,
+                    "hit": winning_signals,
+                    "flop": losing_signals,
+                    "pnl": round(total_pnl, 2)
+                }
+                
                 scanner_state["error_message"] = None
 
                 # Broadcast updates to WebSocket clients
