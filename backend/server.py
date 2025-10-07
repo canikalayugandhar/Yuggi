@@ -221,6 +221,7 @@ async def run_scanner_loop():
                         
                         # Sort by volume (high to low) for better display
                         mock_options.sort(key=lambda x: x["volume"], reverse=True)
+                        # ATM OPTIONS: Show ALL contracts regardless of underlyings filter
                         scanner_state["last_options"] = mock_options[:15]  # Show top 15 options
                         
                         # Filter signals based on underlyings setting
