@@ -3,35 +3,53 @@ import datetime as dt
 import uuid
 
 def create_mock_signals():
-    """Create mock Trinity signals for demo with realistic data"""
+    """Create mock Trinity signals for demo with proper market hours timing"""
     signals = []
-    today = dt.datetime.now()
     
-    # Create signals based on the user's example
+    # Use today's date with IST timezone
+    import pytz
+    IST = pytz.timezone('Asia/Kolkata')
+    today = dt.datetime.now(IST).replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    # Market hours: 9:15 AM to 3:30 PM IST
+    # 15-minute candles: 9:15, 9:30, 9:45, 10:00, 10:15, 10:30, 10:45, 11:00, etc.
+    
+    # Generate signals only at 15-minute intervals during market hours
+    market_start = today.replace(hour=9, minute=15)  # 9:15 AM IST
+    market_end = today.replace(hour=15, minute=30)   # 3:30 PM IST
+    
+    # Valid 15-minute signal times
+    valid_times = []
+    current_time = market_start
+    while current_time <= market_end:
+        valid_times.append(current_time)
+        current_time += dt.timedelta(minutes=15)
+    
+    # Create signals based on user's example with correct market timing
     mock_data = [
-        {"underlying": "DIVISLAB", "strike": 6100, "type": "CE", "entry": 50.8, "outcome": "WIN", "time": "09:30:00", "lot": 100},
-        {"underlying": "AMBER", "strike": 8400, "type": "CE", "entry": 181.2, "outcome": "WIN", "time": "10:15:00", "lot": 100},
-        {"underlying": "BRITANNIA", "strike": 5900, "type": "CE", "entry": 176.85, "outcome": "WIN", "time": "10:15:00", "lot": 125},
-        {"underlying": "ANGELONE", "strike": 2250, "type": "PE", "entry": 81.05, "outcome": "WIN", "time": "10:30:00", "lot": 250},
-        {"underlying": "BRITANNIA", "strike": 5900, "type": "PE", "entry": 80.0, "outcome": "WIN", "time": "12:00:00", "lot": 125},
-        {"underlying": "ASIANPAINT", "strike": 2360, "type": "CE", "entry": 44.1, "outcome": "WIN", "time": "12:30:00", "lot": 250},
-        {"underlying": "CAMS", "strike": 3800, "type": "CE", "entry": 129.5, "outcome": "WIN", "time": "12:30:00", "lot": 150},
-        {"underlying": "MPHASIS", "strike": 2800, "type": "CE", "entry": 83.0, "outcome": "WIN", "time": "12:45:00", "lot": 275},
-        {"underlying": "PERSISTENT", "strike": 5300, "type": "CE", "entry": 163.3, "outcome": "WIN", "time": "13:15:00", "lot": 100},
-        {"underlying": "HINDUNILVR", "strike": 2520, "type": "PE", "entry": 34.05, "outcome": "WIN", "time": "13:15:00", "lot": 300},
-        {"underlying": "MAZDOCK", "strike": 2900, "type": "PE", "entry": 89.55, "outcome": "WIN", "time": "13:15:00", "lot": 175},
-        {"underlying": "SIEMENS", "strike": 3250, "type": "CE", "entry": 77.0, "outcome": "WIN", "time": "13:30:00", "lot": 125},
-        {"underlying": "SHREECEM", "strike": 29500, "type": "CE", "entry": 633.25, "outcome": "PENDING", "time": "14:15:00", "lot": 25},
-        {"underlying": "BANKNIFTY", "strike": 56200, "type": "CE", "entry": 718.15, "outcome": "WIN", "time": "14:30:00", "lot": 35},
-        {"underlying": "HAL", "strike": 4850, "type": "PE", "entry": 110.35, "outcome": "LOSS", "time": "09:30:00", "lot": 150},
-        {"underlying": "BAJAJ-AUTO", "strike": 8900, "type": "CE", "entry": 174.55, "outcome": "WIN", "time": "10:45:00", "lot": 75},
-        {"underlying": "DMART", "strike": 4300, "type": "PE", "entry": 126.8, "outcome": "LOSS", "time": "12:15:00", "lot": 150},
-        {"underlying": "GODREJPROP", "strike": 2080, "type": "CE", "entry": 53.0, "outcome": "WIN", "time": "13:00:00", "lot": 275},
+        {"underlying": "DIVISLAB", "strike": 6100, "type": "CE", "entry": 50.8, "outcome": "WIN", "time_index": 1, "lot": 100},    # 9:30
+        {"underlying": "AMBER", "strike": 8400, "type": "CE", "entry": 181.2, "outcome": "WIN", "time_index": 4, "lot": 100},     # 10:15
+        {"underlying": "BRITANNIA", "strike": 5900, "type": "CE", "entry": 176.85, "outcome": "WIN", "time_index": 4, "lot": 125}, # 10:15
+        {"underlying": "ANGELONE", "strike": 2250, "type": "PE", "entry": 81.05, "outcome": "WIN", "time_index": 5, "lot": 250},   # 10:30
+        {"underlying": "BRITANNIA", "strike": 5900, "type": "PE", "entry": 80.0, "outcome": "WIN", "time_index": 11, "lot": 125},  # 12:00
+        {"underlying": "ASIANPAINT", "strike": 2360, "type": "CE", "entry": 44.1, "outcome": "WIN", "time_index": 13, "lot": 250}, # 12:30
+        {"underlying": "CAMS", "strike": 3800, "type": "CE", "entry": 129.5, "outcome": "WIN", "time_index": 13, "lot": 150},      # 12:30
+        {"underlying": "MPHASIS", "strike": 2800, "type": "CE", "entry": 83.0, "outcome": "WIN", "time_index": 14, "lot": 275},    # 12:45
+        {"underlying": "PERSISTENT", "strike": 5300, "type": "CE", "entry": 163.3, "outcome": "WIN", "time_index": 16, "lot": 100}, # 13:15
+        {"underlying": "HINDUNILVR", "strike": 2520, "type": "PE", "entry": 34.05, "outcome": "WIN", "time_index": 16, "lot": 300}, # 13:15
+        {"underlying": "MAZDOCK", "strike": 2900, "type": "PE", "entry": 89.55, "outcome": "WIN", "time_index": 16, "lot": 175},    # 13:15
+        {"underlying": "SIEMENS", "strike": 3250, "type": "CE", "entry": 77.0, "outcome": "WIN", "time_index": 17, "lot": 125},     # 13:30
+        {"underlying": "SHREECEM", "strike": 29500, "type": "CE", "entry": 633.25, "outcome": "PENDING", "time_index": 20, "lot": 25}, # 14:15
+        {"underlying": "BANKNIFTY", "strike": 56200, "type": "CE", "entry": 718.15, "outcome": "WIN", "time_index": 21, "lot": 35},    # 14:30
+        {"underlying": "HAL", "strike": 4850, "type": "PE", "entry": 110.35, "outcome": "LOSS", "time_index": 1, "lot": 150},       # 9:30
+        {"underlying": "BAJAJ-AUTO", "strike": 8900, "type": "CE", "entry": 174.55, "outcome": "WIN", "time_index": 6, "lot": 75},  # 10:45
+        {"underlying": "DMART", "strike": 4300, "type": "PE", "entry": 126.8, "outcome": "LOSS", "time_index": 12, "lot": 150},     # 12:15
+        {"underlying": "GODREJPROP", "strike": 2080, "type": "CE", "entry": 53.0, "outcome": "WIN", "time_index": 15, "lot": 275},  # 13:00
     ]
     
-    for i, data in enumerate(mock_data):
-        hour, minute, second = map(int, data["time"].split(":"))
-        signal_time = today.replace(hour=hour, minute=minute, second=second)
+    for data in mock_data:
+        # Get the exact 15-minute candle time
+        signal_time = valid_times[data["time_index"]]
         
         entry_price = data["entry"]
         sl_price = round(entry_price * 0.999, 2)  # 0.1% SL
