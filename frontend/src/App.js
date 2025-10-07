@@ -58,12 +58,27 @@ function App() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const { toast } = useToast();
 
-  // Load configuration on component mount
+  // Load configuration on component mount and tab changes
   useEffect(() => {
     loadConfig();
     loadScannerStatus();
     loadRecentSignals();
     loadCurrentOptions();
+  }, []);
+  
+  // Reload config when returning to settings tab
+  useEffect(() => {
+    if (activeTab === 'settings') {
+      loadConfig();
+      // Check if config was recently saved
+      const savedTimestamp = localStorage.getItem('trinity_config_saved');
+      const now = Date.now();
+      if (savedTimestamp && (now - parseInt(savedTimestamp)) < 30000) { // Within 30 seconds
+        setSaveStatus('saved');
+        setTimeout(() => setSaveStatus('idle'), 3000);
+      }
+    }
+  }, [activeTab]);
     
     // 🚀 WebSocket connection for LIVE signals
     const connectWebSocket = () => {
