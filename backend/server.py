@@ -167,24 +167,61 @@ async def run_scanner_loop():
                         mock_signals = create_mock_signals()
                         scanner_state["last_signals"] = mock_signals
                         
-                        # Mock options data
+                        # Mock ATM options data with realistic strikes
+                        import random
                         mock_options = []
-                        for i in range(10):
-                            underlying = ["NIFTY", "BANKNIFTY"][i % 2]
-                            strike = 25000 + (i * 50)
-                            mock_options.append({
-                                "underlying": underlying,
-                                "symbol": f"{underlying}25OCT{strike}CE",
-                                "strike": strike,
-                                "type": "CE" if i % 2 == 0 else "PE",
-                                "expiry": "2025-10-25",
-                                "ltp": round(50 + (i * 10), 2),
-                                "volume": 1000 + (i * 500),
-                                "oi": 10000 + (i * 1000),
-                                "lot": 50,
-                                "investment": round((50 + i * 10) * 50, 2)
-                            })
-                        scanner_state["last_options"] = mock_options
+                        
+                        # NIFTY ATM options around current levels
+                        nifty_spot = 25000
+                        nifty_strikes = [24950, 25000, 25050, 25100, 25150]
+                        
+                        for i, strike in enumerate(nifty_strikes):
+                            for j, option_type in enumerate(["CE", "PE"]):
+                                ltp = random.uniform(30, 150) if option_type == "CE" else random.uniform(25, 120)
+                                volume = random.randint(5000, 50000)
+                                oi = random.randint(100000, 500000)
+                                lot_size = 50
+                                
+                                mock_options.append({
+                                    "underlying": "NIFTY",
+                                    "symbol": f"NIFTY25OCT{strike}{option_type}",
+                                    "strike": strike,
+                                    "type": option_type,
+                                    "expiry": "2025-10-25",
+                                    "ltp": round(ltp, 2),
+                                    "volume": volume,
+                                    "oi": oi,
+                                    "lot": lot_size,
+                                    "investment": round(ltp * lot_size, 2)
+                                })
+                        
+                        # BANKNIFTY ATM options
+                        banknifty_spot = 52000
+                        banknifty_strikes = [51800, 51900, 52000, 52100, 52200]
+                        
+                        for strike in banknifty_strikes[:3]:  # Limit to 3 strikes for BANKNIFTY
+                            for option_type in ["CE", "PE"]:
+                                ltp = random.uniform(50, 200) if option_type == "CE" else random.uniform(40, 180)
+                                volume = random.randint(3000, 30000)
+                                oi = random.randint(50000, 300000)
+                                lot_size = 25
+                                
+                                mock_options.append({
+                                    "underlying": "BANKNIFTY",
+                                    "symbol": f"BANKNIFTY25OCT{strike}{option_type}",
+                                    "strike": strike,
+                                    "type": option_type,
+                                    "expiry": "2025-10-25",
+                                    "ltp": round(ltp, 2),
+                                    "volume": volume,
+                                    "oi": oi,
+                                    "lot": lot_size,
+                                    "investment": round(ltp * lot_size, 2)
+                                })
+                        
+                        # Sort by volume (high to low) for better display
+                        mock_options.sort(key=lambda x: x["volume"], reverse=True)
+                        scanner_state["last_options"] = mock_options[:15]  # Show top 15 options
                         
                         # Update stats
                         scanner_state["stats"] = {
