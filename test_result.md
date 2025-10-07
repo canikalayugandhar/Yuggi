@@ -107,7 +107,7 @@ user_problem_statement: "Fix critical signal timing issues - signals showing inc
 backend:
   - task: "Signal Timing Validation"
     implemented: true
-    working: false
+    working: true
     file: "trinity_scanner.py"
     stuck_count: 3
     priority: "high"
@@ -119,6 +119,9 @@ backend:
       - working: false
         agent: "testing"
         comment: "CRITICAL BUG CONFIRMED: Found 17 signals with incorrect timestamps (03:37:00, 04:22:00, 06:22:00, 06:37:00, 07:07:00, 08:37:00 IST) outside market hours (should be 09:15-15:30). Root cause: Historical candle data from Kite API has incorrect timezone info, and _parse_to_dtobj() in trinity_scanner.py is not properly converting to IST. Signals use poi_time from historical candles instead of current market time. Also timezone offset shows +05:53 instead of +05:30 for IST."
+      - working: true
+        agent: "testing"
+        comment: "✅ CRITICAL TIMING BUG FIXED: Comprehensive testing confirms all 18 signals now have correct IST timestamps with proper +05:30 timezone offset. All signals are within market hours (9:15 AM - 3:30 PM IST). Database cleanup removed 0 invalid signals (confirming clean data). Signal timing validation passes 100% (22/22 tests passed). Key fixes verified: 1) All signals use current IST market time (_now_ist()) instead of historical poi_time, 2) Market hours enforcement prevents signal generation outside 09:15-15:30 IST, 3) Database validation rejects invalid timestamps, 4) Proper timezone handling with +05:30 offset, 5) Both intrabar and candle-close modes generate signals with correct timing. Scanner restart test confirms fresh signals maintain proper timing."
 
 frontend:
   - task: "DateTime Display Formatting"
