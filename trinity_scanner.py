@@ -593,36 +593,47 @@ def _fetch_historical_safe(kite, token, from_dt, to_dt, tf):
 
 
 def _parse_to_dtobj(ts):
+    """
+    Parse timestamp to IST datetime object.
+    Kite Connect historical data often comes in UTC or has timezone issues.
+    This function handles proper conversion to IST.
+    """
     if not ts:
         return None
     try:
+        # Convert to pandas datetime first
         if hasattr(ts, "to_pydatetime"):
             dtobj = ts.to_pydatetime()
         else:
             dtobj = pd.to_datetime(str(ts))
         
-        # Ensure we have a timezone-aware datetime in IST
-        if hasattr(dtobj, "tz_localize"):
-            if dtobj.tzinfo is None:
-                dtobj = dtobj.tz_localize(IST)
-            else:
-                dtobj = dtobj.tz_convert(IST)
-        
+        # Handle pandas Timestamp
         if isinstance(dtobj, pd.Timestamp):
+            if dtobj.tzinfo is None:
+                # Assume UTC if no timezone (Kite Connect default)
+                dtobj = dtobj.tz_localize('UTC').tz_convert(IST)
+            else:
+                # Convert existing timezone to IST
+                dtobj = dtobj.tz_convert(IST)
             dtobj = dtobj.to_pydatetime()
         
-        # Force conversion to IST if no timezone
-        if isinstance(dtobj, dt.datetime):
+        # Handle Python datetime
+        elif isinstance(dtobj, dt.datetime):
             if dtobj.tzinfo is None:
-                dtobj = dtobj.replace(tzinfo=IST)
+                # Assume UTC if no timezone info (Kite Connect historical data default)
+                utc_dt = dtobj.replace(tzinfo=pytz.UTC)
+                dtobj = utc_dt.astimezone(IST)
             else:
+                # Convert to IST
                 dtobj = dtobj.astimezone(IST)
         
         return dtobj
     except Exception:
         try:
+            # Fallback: parse as naive datetime and assume UTC
             naive_dt = dt.datetime.fromisoformat(str(ts).replace('Z', ''))
-            return naive_dt.replace(tzinfo=IST)
+            utc_dt = naive_dt.replace(tzinfo=pytz.UTC)
+            return utc_dt.astimezone(IST)
         except Exception:
             return None
 
