@@ -434,8 +434,21 @@ async def get_scanner_status():
 @api_router.get("/scanner/signals", response_model=List[Dict])
 async def get_recent_signals():
     """Get recent signals"""
-    signals = await db.signals.find().sort("created_at", -1).limit(100).to_list(100)
-    return signals
+    try:
+        signals = await db.signals.find().sort("created_at", -1).limit(100).to_list(100)
+        # Convert ObjectId to string to avoid serialization errors
+        for signal in signals:
+            if "_id" in signal:
+                signal["_id"] = str(signal["_id"])
+            # Convert datetime objects to ISO strings
+            for field in ["signal_time", "created_at", "entry_time", "poi_time", "bos_time", "induc_time", "hit_time"]:
+                if field in signal and signal[field]:
+                    if hasattr(signal[field], 'isoformat'):
+                        signal[field] = signal[field].isoformat()
+        return signals
+    except Exception as e:
+        # Return in-memory signals if database fails
+        return scanner_state.get("last_signals", [])
 
 @api_router.get("/scanner/options", response_model=List[Dict])
 async def get_current_options():
