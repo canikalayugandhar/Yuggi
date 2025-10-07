@@ -129,30 +129,7 @@ const ExpiryDateSelector = ({ value = [], onChange, ...props }) => {
         </Button>
       </div>
 
-      {/* Suggested Expiry Dates */}
-      <div className="space-y-2">
-        <Label className="text-sm">Quick Select (Typical Expiry Thursdays):</Label>
-        <div className="grid grid-cols-2 gap-2">
-          {suggestedDates.map((suggestion) => (
-            <Button
-              key={suggestion.date}
-              type="button"
-              variant={value.includes(suggestion.date) ? "default" : "outline"}
-              size="sm"
-              onClick={() => handleSuggestedDateClick(suggestion)}
-              disabled={value.includes(suggestion.date)}
-              className="justify-start text-xs"
-              data-testid={`suggested-date-${suggestion.date}`}
-            >
-              <Calendar className="w-3 h-3 mr-1" />
-              {suggestion.label}
-              {suggestion.isMonthly && (
-                <Badge variant="secondary" className="ml-1 text-xs">Monthly</Badge>
-              )}
-            </Button>
-          ))}
-        </div>
-      </div>
+      {/* Removed Quick Select as requested */}
 
       {/* Clear All */}
       {value.length > 0 && (
