@@ -690,9 +690,15 @@ def options_rows_to_signals(kite, rows, sl_pct: float = 0.1, tp_pct: float = 0.1
             for s in smc_signals:
                 try:
                     entry_dt = _parse_to_dtobj(s.get("entry_time"))
-                    if not entry_dt or entry_dt.date() != today_date:
+                    if not entry_dt:
                         continue
-                    if entry_dt.hour < 9 or (entry_dt.hour == 9 and entry_dt.minute < 30):
+                    
+                    # Ensure entry time is today and within market hours
+                    if entry_dt.date() != today_date:
+                        continue
+                    
+                    # STRICT market hours validation: 9:15 AM - 3:30 PM IST
+                    if not _within_market_hours(entry_dt):
                         continue
                     entry = float(s.get("entry_price"))
                     sl = float(s.get("sl"))
