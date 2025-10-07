@@ -558,11 +558,14 @@ async def get_recent_signals():
         for signal in signals:
             if "_id" in signal:
                 signal["_id"] = str(signal["_id"])
-            # Convert datetime objects to ISO strings
+            # Convert datetime objects to ISO strings with proper timezone
             for field in ["signal_time", "created_at", "entry_time", "poi_time", "bos_time", "induc_time", "hit_time"]:
                 if field in signal and signal[field]:
                     if hasattr(signal[field], 'isoformat'):
                         signal[field] = signal[field].isoformat()
+                    elif isinstance(signal[field], str) and 'T' in signal[field]:
+                        # Already ISO string, keep as is
+                        continue
         return signals
     except Exception as e:
         # Return in-memory signals if database fails
