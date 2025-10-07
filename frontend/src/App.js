@@ -461,25 +461,43 @@ function App() {
               )}
             </div>
             
-            <Button
-              onClick={scannerStatus.is_running ? stopScanner : startScanner}
-              disabled={loading}
-              variant={scannerStatus.is_running ? "destructive" : "default"}
-              size="sm"
-              data-testid={scannerStatus.is_running ? "stop-scanner-btn" : "start-scanner-btn"}
-            >
-              {scannerStatus.is_running ? (
-                <>
-                  <Square className="w-4 h-4 mr-2" />
-                  Stop Scanner
-                </>
-              ) : (
-                <>
-                  <Play className="w-4 h-4 mr-2" />
-                  Start Scanner
-                </>
-              )}
-            </Button>
+            <div className="flex items-center space-x-2">
+              <Button
+                onClick={scannerStatus.is_running ? stopScanner : startScanner}
+                disabled={loading}
+                variant={scannerStatus.is_running ? "destructive" : "default"}
+                size="sm"
+                data-testid={scannerStatus.is_running ? "stop-scanner-btn" : "start-scanner-btn"}
+                className={loading ? "opacity-75" : ""}
+              >
+                {loading ? (
+                  <>
+                    <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    {scannerStatus.is_running ? "Stopping..." : "Starting..."}
+                  </>
+                ) : scannerStatus.is_running ? (
+                  <>
+                    <Square className="w-4 h-4 mr-2" />
+                    Stop Scanner
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-4 h-4 mr-2" />
+                    Start Scanner
+                  </>
+                )}
+              </Button>
+              
+              <Button
+                onClick={loadScannerStatus}
+                variant="outline"
+                size="sm"
+                disabled={loading}
+                title="Refresh Status"
+              >
+                <Activity className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         </div>
 
