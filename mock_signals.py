@@ -29,26 +29,26 @@ def create_mock_signals():
     print(f"DEBUG: Generated {len(valid_times)} valid market time slots")
     print(f"DEBUG: Market times from {valid_times[0]} to {valid_times[-1]}")
     
-    # Create signals ONLY during market hours with correct indices
+    # Create signals with ONLY VALID market hours indices (0-25)
     mock_data = [
         {"underlying": "DIVISLAB", "strike": 6100, "type": "CE", "entry": 50.8, "outcome": "WIN", "time_index": 1, "lot": 100},    # 9:30
         {"underlying": "AMBER", "strike": 8400, "type": "CE", "entry": 181.2, "outcome": "WIN", "time_index": 4, "lot": 100},     # 10:15  
-        {"underlying": "BRITANNIA", "strike": 5900, "type": "CE", "entry": 176.85, "outcome": "WIN", "time_index": 4, "lot": 125}, # 10:15
-        {"underlying": "ANGELONE", "strike": 2250, "type": "PE", "entry": 81.05, "outcome": "WIN", "time_index": 5, "lot": 250},   # 10:30
+        {"underlying": "BRITANNIA", "strike": 5900, "type": "CE", "entry": 176.85, "outcome": "WIN", "time_index": 5, "lot": 125}, # 10:30
+        {"underlying": "ANGELONE", "strike": 2250, "type": "PE", "entry": 81.05, "outcome": "WIN", "time_index": 6, "lot": 250},   # 10:45
         {"underlying": "BRITANNIA", "strike": 5900, "type": "PE", "entry": 80.0, "outcome": "WIN", "time_index": 11, "lot": 125},  # 12:00
         {"underlying": "ASIANPAINT", "strike": 2360, "type": "CE", "entry": 44.1, "outcome": "WIN", "time_index": 13, "lot": 250}, # 12:30
-        {"underlying": "CAMS", "strike": 3800, "type": "CE", "entry": 129.5, "outcome": "WIN", "time_index": 13, "lot": 150},      # 12:30
-        {"underlying": "MPHASIS", "strike": 2800, "type": "CE", "entry": 83.0, "outcome": "WIN", "time_index": 14, "lot": 275},    # 12:45
+        {"underlying": "CAMS", "strike": 3800, "type": "CE", "entry": 129.5, "outcome": "WIN", "time_index": 14, "lot": 150},      # 12:45
+        {"underlying": "MPHASIS", "strike": 2800, "type": "CE", "entry": 83.0, "outcome": "WIN", "time_index": 15, "lot": 275},    # 13:00
         {"underlying": "PERSISTENT", "strike": 5300, "type": "CE", "entry": 163.3, "outcome": "WIN", "time_index": 16, "lot": 100}, # 13:15
-        {"underlying": "HINDUNILVR", "strike": 2520, "type": "PE", "entry": 34.05, "outcome": "WIN", "time_index": 16, "lot": 300}, # 13:15
-        {"underlying": "MAZDOCK", "strike": 2900, "type": "PE", "entry": 89.55, "outcome": "WIN", "time_index": 16, "lot": 175},    # 13:15
-        {"underlying": "SIEMENS", "strike": 3250, "type": "CE", "entry": 77.0, "outcome": "WIN", "time_index": 17, "lot": 125},     # 13:30
+        {"underlying": "HINDUNILVR", "strike": 2520, "type": "PE", "entry": 34.05, "outcome": "WIN", "time_index": 17, "lot": 300}, # 13:30
+        {"underlying": "MAZDOCK", "strike": 2900, "type": "PE", "entry": 89.55, "outcome": "WIN", "time_index": 18, "lot": 175},    # 13:45
+        {"underlying": "SIEMENS", "strike": 3250, "type": "CE", "entry": 77.0, "outcome": "WIN", "time_index": 19, "lot": 125},     # 14:00
         {"underlying": "SHREECEM", "strike": 29500, "type": "CE", "entry": 633.25, "outcome": "PENDING", "time_index": 20, "lot": 25}, # 14:15
         {"underlying": "BANKNIFTY", "strike": 56200, "type": "CE", "entry": 718.15, "outcome": "WIN", "time_index": 21, "lot": 35},    # 14:30  
-        {"underlying": "HAL", "strike": 4850, "type": "PE", "entry": 110.35, "outcome": "LOSS", "time_index": 1, "lot": 150},       # 9:30
-        {"underlying": "BAJAJ-AUTO", "strike": 8900, "type": "CE", "entry": 174.55, "outcome": "WIN", "time_index": 6, "lot": 75},  # 10:45
+        {"underlying": "HAL", "strike": 4850, "type": "PE", "entry": 110.35, "outcome": "LOSS", "time_index": 2, "lot": 150},       # 9:45
+        {"underlying": "BAJAJ-AUTO", "strike": 8900, "type": "CE", "entry": 174.55, "outcome": "WIN", "time_index": 7, "lot": 75},  # 11:00
         {"underlying": "DMART", "strike": 4300, "type": "PE", "entry": 126.8, "outcome": "LOSS", "time_index": 12, "lot": 150},     # 12:15
-        {"underlying": "GODREJPROP", "strike": 2080, "type": "CE", "entry": 53.0, "outcome": "WIN", "time_index": 15, "lot": 275},  # 13:00
+        {"underlying": "GODREJPROP", "strike": 2080, "type": "CE", "entry": 53.0, "outcome": "WIN", "time_index": 22, "lot": 275},  # 14:45
     ]
     
     for data in mock_data:
