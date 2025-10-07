@@ -10,7 +10,7 @@ import datetime as dt
 import pytz
 
 # Test Configuration
-BACKEND_URL = "https://wealth-scanner-2.preview.emergentagent.com/api"
+BACKEND_URL = "http://localhost:8001/api"
 IST = pytz.timezone('Asia/Kolkata')
 
 def test_api_basic():
