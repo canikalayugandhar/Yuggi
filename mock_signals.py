@@ -61,8 +61,18 @@ def create_mock_signals():
         signal_time = valid_times[data["time_index"]]
         
         entry_price = data["entry"]
-        sl_price = round(entry_price * 0.999, 2)  # 0.1% SL
-        tp_price = round(entry_price * 1.001, 2)  # 0.1% TP
+        
+        # Calculate SL and TP according to original Trinity logic
+        sl_pct = 0.1 / 100.0  # 0.1% -> 0.001
+        tp_pct = 0.1 / 100.0  # 0.1% -> 0.001
+        
+        sl_price = round(entry_price * (1 - sl_pct), 2)
+        
+        # TP based on Buy-Side Liquidity (BSL) as per original code
+        # For mock data, assume BSL is higher than entry (typical bullish scenario)
+        buy_liq = entry_price * 1.15  # Mock BSL 15% above entry
+        tp_price = round(buy_liq * (1 - tp_pct), 2)  # TP slightly below BSL
+        
         rr = round((tp_price - entry_price) / (entry_price - sl_price), 2) if entry_price > sl_price else 1.0
         
         signals.append({
