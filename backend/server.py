@@ -86,6 +86,7 @@ class ScannerConfig(BaseModel):
     allow_intrabar: bool = False
     mode: str = "live"  # "live" or "backtest"
     underlyings: List[str] = []
+    only_expiry_dates: List[str] = []  # Format: ["2025-10-17", "2025-10-24"]
 
 class ScannerStatus(BaseModel):
     is_running: bool
