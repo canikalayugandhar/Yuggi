@@ -223,11 +223,24 @@ async def run_scanner_loop():
                         mock_options.sort(key=lambda x: x["volume"], reverse=True)
                         scanner_state["last_options"] = mock_options[:15]  # Show top 15 options
                         
+                        # Filter signals based on underlyings setting
+                        underlyings_filter = config.get("underlyings", [])
+                        if underlyings_filter:
+                            # Only include signals for specified underlyings
+                            filtered_signals = []
+                            for signal in mock_signals:
+                                signal_underlying = signal.get("underlying", "").upper()
+                                if any(signal_underlying == uf.upper() for uf in underlyings_filter):
+                                    filtered_signals.append(signal)
+                            mock_signals = filtered_signals
+                            logging.info(f"🎯 Filtered to {len(mock_signals)} signals for underlyings: {underlyings_filter}")
+                        
                         # Clear any existing signals to avoid duplicates
                         await db.signals.delete_many({})
                         
-                        # Insert fresh mock signals
-                        await db.signals.insert_many(mock_signals)
+                        # Insert fresh filtered signals
+                        if mock_signals:
+                            await db.signals.insert_many(mock_signals)
                         
                         # Update stats based on fresh data
                         scanner_state["stats"] = {
