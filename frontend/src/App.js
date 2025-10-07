@@ -407,22 +407,16 @@ function App() {
     } catch (error) {
       console.error('❌ Scanner start error:', error);
       
-      // Check if it's a timeout or connection error
-      if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+      // Simplified error handling - no timeout messages
+      if (!error.message.includes('timeout')) {
         toast({
-          title: "⏱️ Request Timeout",
-          description: "Scanner start taking longer than expected. Please check status.",
+          title: "❌ Start Failed", 
+          description: error.response?.data?.detail || "Failed to start scanner",
           variant: "destructive",
-          duration: 5000
-        });
-      } else {
-        toast({
-          title: "❌ Start Failed",
-          description: error.response?.data?.detail || error.message || "Failed to start scanner",
-          variant: "destructive",
-          duration: 5000
+          duration: 3000
         });
       }
+      // Skip timeout messages - they're not helpful
     } finally {
       setLoading(false);
       
