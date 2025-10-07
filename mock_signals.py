@@ -52,6 +52,11 @@ def create_mock_signals():
     ]
     
     for data in mock_data:
+        # Validate time_index to avoid out of bounds error
+        if data["time_index"] >= len(valid_times):
+            print(f"WARNING: time_index {data['time_index']} out of range for {data['underlying']}")
+            continue
+            
         # Get the exact 15-minute candle time
         signal_time = valid_times[data["time_index"]]
         
