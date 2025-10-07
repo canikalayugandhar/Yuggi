@@ -172,21 +172,45 @@ function App() {
     }
   };
 
-  const saveConfig = () => {
-    // INSTANT local save - no backend delays
+  const saveConfig = async () => {
+    // Clear previous status and start saving
+    setSaveStatus('saving');
     setLoading(true);
     
-    // Store in localStorage for instant response
-    localStorage.setItem('trinity_config', JSON.stringify(config));
-    
-    // Simulate instant save
-    setTimeout(() => {
-      setLoading(false);
-      setSaved(true);
+    try {
+      // 1. Save to localStorage first (instant backup)
+      localStorage.setItem('trinity_config', JSON.stringify(config));
       
-      // Reset saved state after 3 seconds
-      setTimeout(() => setSaved(false), 3000);
-    }, 100); // Only 100ms delay for visual feedback
+      // 2. Save to backend (for persistence)
+      const response = await axios.post(`${API}/scanner/config`, config);
+      
+      if (response.status === 200) {
+        setSaveStatus('saved');
+        toast({
+          title: "✅ Configuration Saved!",
+          description: "All settings have been saved successfully",
+          variant: "default",
+          duration: 3000
+        });
+      }
+    } catch (error) {
+      // Even if backend fails, localStorage save succeeded
+      setSaveStatus('saved');
+      console.warn('Backend save failed, but localStorage saved:', error);
+      toast({
+        title: "⚠️ Configuration Saved Locally",
+        description: "Settings saved to browser (backend unavailable)",
+        variant: "default",
+        duration: 3000
+      });
+    } finally {
+      setLoading(false);
+      
+      // Reset status after 4 seconds
+      setTimeout(() => {
+        setSaveStatus('idle');
+      }, 4000);
+    }
   };
 
   const startScanner = async () => {
