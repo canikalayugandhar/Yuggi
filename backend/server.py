@@ -223,7 +223,13 @@ async def run_scanner_loop():
                         mock_options.sort(key=lambda x: x["volume"], reverse=True)
                         scanner_state["last_options"] = mock_options[:15]  # Show top 15 options
                         
-                        # Update stats
+                        # Clear any existing signals to avoid duplicates
+                        await db.signals.delete_many({})
+                        
+                        # Insert fresh mock signals
+                        await db.signals.insert_many(mock_signals)
+                        
+                        # Update stats based on fresh data
                         scanner_state["stats"] = {
                             "total": len(mock_signals),
                             "hit": len([s for s in mock_signals if s["outcome"] == "WIN"]),
