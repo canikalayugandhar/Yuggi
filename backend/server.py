@@ -603,6 +603,7 @@ async def start_scanner(background_tasks: BackgroundTasks):
     scanner_state["is_running"] = True
     scanner_state["error_message"] = None
     background_tasks.add_task(run_scanner_loop)
+    background_tasks.add_task(monitor_signal_outcomes)  # Start outcome monitoring
     
     return {"message": "Scanner started successfully"}
 
