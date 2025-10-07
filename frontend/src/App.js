@@ -31,7 +31,7 @@ function App() {
     telegram_chat_id: "",
     atm_range: 1,
     min_volume: 1000,
-    min_strike: 1000,
+    min_strike: 2000,
     refresh_sec: 10,
     max_candidates: 100,
     show_atm_table: true,
