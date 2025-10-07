@@ -643,7 +643,7 @@ async def get_recent_signals():
                         # Already ISO string, keep as is
                         continue
         return signals
-    except Exception as e:
+    except Exception:
         # Return in-memory signals if database fails
         return scanner_state.get("last_signals", [])
 
