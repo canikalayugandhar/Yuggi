@@ -151,3 +151,5 @@ test_plan:
 agent_communication:
   - agent: "main"
     message: "Identified critical timing bug - signals showing outside market hours. Need to fix timezone handling and market hours validation in both backend and frontend"
+  - agent: "testing"
+    message: "CRITICAL TIMING BUG CONFIRMED: Backend testing reveals 17/35 signals have incorrect timestamps outside market hours (03:37, 04:22, 06:22, 06:37, 07:07, 08:37 IST). Root cause identified: trinity_scanner.py _parse_to_dtobj() function not properly converting historical candle timestamps to IST. Signals use poi_time from historical data instead of current market time. Timezone offset shows +05:53 instead of +05:30. IMMEDIATE FIX REQUIRED: Force all signal timestamps to use _now_ist() during market hours, fix timezone conversion in _parse_to_dtobj(), and validate all signals before database insertion."
