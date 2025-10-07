@@ -148,18 +148,38 @@ async def run_scanner_loop():
             # Initialize Kite session if not exists
             if not scanner_state["kite_session"]:
                 try:
-                    # Check if we have valid API credentials
-                    if config["api_key"] and config["api_secret"] and len(config["api_key"]) > 10:
-                        kite, access_token = ensure_kite_session(
-                            config["api_key"], 
-                            config["api_secret"], 
-                            config.get("access_token")
-                        )
-                        scanner_state["kite_session"] = kite
-                        scanner_state["config"]["access_token"] = access_token
-                        scanner_state["error_message"] = None
+                    # Check if we have REAL API credentials (not demo)
+                    api_key = config["api_key"]
+                    api_secret = config["api_secret"]
+                    
+                    if (api_key and api_secret and 
+                        not api_key.startswith("demo") and 
+                        len(api_key) >= 15 and len(api_secret) >= 20):
+                        
+                        # REAL API CREDENTIALS - Use Kite Connect
+                        try:
+                            kite, access_token = ensure_kite_session(
+                                api_key, 
+                                api_secret, 
+                                config.get("access_token")
+                            )
+                            scanner_state["kite_session"] = kite
+                            scanner_state["config"]["access_token"] = access_token
+                            scanner_state["error_message"] = None
+                            logging.info(f"✅ LIVE MODE: Using real Kite API with key {api_key[:8]}...")
+                            
+                            # TODO: Implement real signal generation with live data
+                            # For now, skip mock and do real analysis
+                            await asyncio.sleep(config.get("refresh_sec", 10))
+                            continue
+                            
+                        except Exception as e:
+                            scanner_state["error_message"] = f"Kite API Error: {str(e)}"
+                            logging.error(f"❌ Kite API failed: {e}")
+                            await asyncio.sleep(30)
+                            continue
                     else:
-                        # Use mock mode for demo purposes
+                        # DEMO/MOCK MODE
                         scanner_state["error_message"] = "Demo mode: Using mock data (configure real API credentials for live trading)"
                         # Generate mock signals for demo
                         sys.path.append('/app')
