@@ -136,12 +136,23 @@ function App() {
 
   const loadConfig = async () => {
     try {
+      // 1. First load from localStorage (instant)
+      const localConfig = localStorage.getItem('trinity_config');
+      if (localConfig) {
+        const parsedConfig = JSON.parse(localConfig);
+        setConfig(prev => ({ ...prev, ...parsedConfig }));
+        console.log('✅ Configuration loaded from localStorage');
+      }
+      
+      // 2. Then try to load from backend (fallback)
       const response = await axios.get(`${API}/scanner/config`);
-      if (response.data) {
+      if (response.data && Object.keys(response.data).length > 0) {
         setConfig(prev => ({ ...prev, ...response.data }));
+        console.log('✅ Configuration loaded from backend');
       }
     } catch (error) {
-      console.error("Failed to load config:", error);
+      console.error("Failed to load config from backend:", error);
+      // localStorage config is still loaded if available
     }
   };
 
