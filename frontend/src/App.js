@@ -590,39 +590,40 @@ function App() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <Label htmlFor="api_key">API Key</Label>
+                    <Label>API Key</Label>
                     <Input
-                      id="api_key"
                       type="text"
-                      value={config.api_key}
-                      onChange={(e) => setConfig(prev => ({ ...prev, api_key: e.target.value }))}
-                      placeholder="Enter your Kite API key"
-                      data-testid="api-key-input"
+                      value="jdhb0gprnxjr1k31"
+                      disabled
+                      className="bg-gray-100 text-gray-600"
                     />
+                    <div className="text-xs text-gray-500 mt-1">API credentials configured</div>
                   </div>
                   
                   <div>
-                    <Label htmlFor="api_secret">API Secret</Label>
+                    <Label>API Secret</Label>
                     <Input
-                      id="api_secret"
                       type="password"
-                      value={config.api_secret}
-                      onChange={(e) => setConfig(prev => ({ ...prev, api_secret: e.target.value }))}
-                      placeholder="Enter your Kite API secret"
-                      data-testid="api-secret-input"
+                      value="4qnsimdyhlrgm3tqk7toiosu8u2i9wsg"
+                      disabled
+                      className="bg-gray-100 text-gray-600"
                     />
+                    <div className="text-xs text-gray-500 mt-1">API credentials configured</div>
                   </div>
                   
                   <div>
-                    <Label htmlFor="access_token">Access Token (Optional)</Label>
+                    <Label htmlFor="access_token">Access Token (Daily)</Label>
                     <Input
                       id="access_token"
                       type="text"
                       value={config.access_token}
                       onChange={(e) => setConfig(prev => ({ ...prev, access_token: e.target.value }))}
-                      placeholder="Will be auto-generated if empty"
+                      placeholder="Enter access token (valid for today only)"
                       data-testid="access-token-input"
                     />
+                    <div className="text-xs text-gray-500 mt-1">
+                      Access token expires at end of trading day - enter once per day
+                    </div>
                   </div>
                 </CardContent>
               </Card>
