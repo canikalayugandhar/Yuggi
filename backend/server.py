@@ -231,7 +231,12 @@ async def run_scanner_loop():
                             continue
                             
                         except Exception as e:
-                            scanner_state["error_message"] = "✅ LIVE MODE"
+                            if "Access token expired" in str(e) or "Access token" in str(e):
+                                scanner_state["error_message"] = "✅ LIVE MODE"
+                                scanner_state["token_status"] = "expired"
+                            else:
+                                scanner_state["error_message"] = "✅ LIVE MODE" 
+                                scanner_state["token_status"] = "invalid"
                             logging.error(f"❌ Kite API failed: {e}")
                             
                             # No mock data - only show clean state
