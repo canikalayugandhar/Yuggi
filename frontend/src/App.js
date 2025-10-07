@@ -73,9 +73,10 @@ function App() {
       // Check if config was recently saved
       const savedTimestamp = localStorage.getItem('trinity_config_saved');
       const now = Date.now();
-      if (savedTimestamp && (now - parseInt(savedTimestamp)) < 30000) { // Within 30 seconds
+      if (savedTimestamp && (now - parseInt(savedTimestamp)) < 1800000) { // Within 30 minutes
         setSaveStatus('saved');
-        setTimeout(() => setSaveStatus('idle'), 3000);
+        // Keep saved status visible much longer
+        setTimeout(() => setSaveStatus('idle'), 300000); // 5 minutes
       }
     }
   }, [activeTab]);
