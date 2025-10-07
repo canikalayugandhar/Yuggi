@@ -63,16 +63,73 @@ function App() {
     loadRecentSignals();
     loadCurrentOptions();
     
-    // Set up polling for real-time updates
+    // 🚀 WebSocket connection for LIVE signals
+    const connectWebSocket = () => {
+      const wsUrl = BACKEND_URL.replace('https://', 'wss://').replace('http://', 'ws://') + '/api/scanner/ws';
+      const ws = new WebSocket(wsUrl);
+      
+      ws.onopen = () => {
+        console.log('🔥 LIVE Signal WebSocket connected');
+      };
+      
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === 'live_signal') {
+            // 🚀 INSTANT LIVE SIGNAL UPDATE
+            const newSignal = data.data.signal;
+            setSignals(prev => [newSignal, ...prev]);
+            
+            // Show live signal notification
+            toast({
+              title: "🚀 LIVE SIGNAL!",
+              description: `${newSignal.underlying} ${newSignal.contract} @ ₹${newSignal.entry_price}`,
+              variant: "default",
+              duration: 5000
+            });
+            
+            console.log('🎯 LIVE SIGNAL:', newSignal);
+          } else if (data.type === 'scanner_update') {
+            // Update dashboard data
+            if (data.data.signals) setSignals(prev => [...data.data.signals, ...prev]);
+            if (data.data.options) setOptions(data.data.options);
+            if (data.data.stats) setScannerStatus(prev => ({ ...prev, stats: data.data.stats }));
+          }
+        } catch (error) {
+          console.error('WebSocket message error:', error);
+        }
+      };
+      
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+      };
+      
+      ws.onclose = () => {
+        console.log('WebSocket closed, reconnecting in 3s...');
+        setTimeout(connectWebSocket, 3000);
+      };
+      
+      return ws;
+    };
+    
+    let websocket = null;
+    if (scannerStatus.is_running) {
+      websocket = connectWebSocket();
+    }
+    
+    // Fallback polling for non-critical updates
     const interval = setInterval(() => {
       loadScannerStatus();
-      if (scannerStatus.is_running) {
+      if (!scannerStatus.is_running) {
         loadRecentSignals();
         loadCurrentOptions();
       }
-    }, 5000);
+    }, 10000);
     
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      if (websocket) websocket.close();
+    };
   }, [scannerStatus.is_running]);
 
   const loadConfig = async () => {
