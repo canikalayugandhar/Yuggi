@@ -555,11 +555,18 @@ async def get_recent_signals():
         for signal in signals:
             if "_id" in signal:
                 signal["_id"] = str(signal["_id"])
-            # Convert datetime objects to ISO strings with proper timezone
+            # Convert datetime objects to ISO strings with proper IST timezone
+            IST_TZ = pytz.timezone('Asia/Kolkata')
             for field in ["signal_time", "created_at", "entry_time", "poi_time", "bos_time", "induc_time", "hit_time"]:
                 if field in signal and signal[field]:
                     if hasattr(signal[field], 'isoformat'):
-                        signal[field] = signal[field].isoformat()
+                        # Ensure timezone is IST before converting
+                        dt_obj = signal[field]
+                        if dt_obj.tzinfo is None:
+                            dt_obj = dt_obj.replace(tzinfo=IST_TZ)
+                        else:
+                            dt_obj = dt_obj.astimezone(IST_TZ)
+                        signal[field] = dt_obj.isoformat()
                     elif isinstance(signal[field], str) and 'T' in signal[field]:
                         # Already ISO string, keep as is
                         continue
