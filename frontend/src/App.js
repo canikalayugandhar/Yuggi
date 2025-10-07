@@ -276,33 +276,69 @@ function App() {
 
   const startScanner = async () => {
     setLoading(true);
+    
     try {
+      console.log('🔄 Starting scanner...');
+      
       // Send current config to backend before starting
       const currentConfig = localStorage.getItem('trinity_config');
       if (currentConfig) {
         try {
-          await axios.post(`${API}/scanner/config`, JSON.parse(currentConfig));
+          await axios.post(`${API}/scanner/config`, JSON.parse(currentConfig), {
+            timeout: 10000 // 10 second timeout
+          });
           console.log('📤 Synced config to backend before starting scanner');
         } catch (syncError) {
           console.warn('Config sync failed, but continuing with scanner start:', syncError);
         }
       }
       
-      await axios.post(`${API}/scanner/start`);
-      toast({
-        title: "Success",
-        description: "Scanner started successfully!",
-        variant: "default"
+      // Start the scanner with timeout
+      const response = await axios.post(`${API}/scanner/start`, {}, {
+        timeout: 15000 // 15 second timeout
       });
-      loadScannerStatus();
+      
+      console.log('✅ Scanner start response:', response.status);
+      
+      // Force reload status immediately
+      setTimeout(() => {
+        loadScannerStatus();
+      }, 1000);
+      
+      // Show success notification
+      toast({
+        title: "🚀 Scanner Started!",
+        description: "Trinity Wealth Scanner is now running",
+        variant: "default",
+        duration: 4000
+      });
+      
     } catch (error) {
-      toast({
-        title: "Error",
-        description: error.response?.data?.detail || "Failed to start scanner",
-        variant: "destructive"
-      });
+      console.error('❌ Scanner start error:', error);
+      
+      // Check if it's a timeout or connection error
+      if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+        toast({
+          title: "⏱️ Request Timeout",
+          description: "Scanner start taking longer than expected. Please check status.",
+          variant: "destructive",
+          duration: 5000
+        });
+      } else {
+        toast({
+          title: "❌ Start Failed",
+          description: error.response?.data?.detail || error.message || "Failed to start scanner",
+          variant: "destructive",
+          duration: 5000
+        });
+      }
     } finally {
       setLoading(false);
+      
+      // Always reload status after attempt
+      setTimeout(() => {
+        loadScannerStatus();
+      }, 2000);
     }
   };
 
