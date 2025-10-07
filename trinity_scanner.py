@@ -508,7 +508,10 @@ def run_ymc_scan_on_candles(candles, min_candles_required: Optional[int] = None,
 
         # 🎯 CRITICAL FIX: Use LIVE market price instead of historical POI price
         # Get current market LTP for realistic entry price
-        if allow_intrabar and len(candles) > 0:
+        if live_ltp is not None and allow_intrabar:
+            # Use live LTP passed from caller (most accurate for real trading)
+            entry_price = round(live_ltp, 2)  # Live market price
+        elif allow_intrabar and len(candles) > 0:
             # Use live LTP from current candle (more accurate for real trading)
             entry_price = round(candles[-1]["close"], 2)  # Current market price
         else:
