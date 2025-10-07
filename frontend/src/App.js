@@ -720,7 +720,14 @@ function App() {
                   <CardDescription>
                     Kite Connect API credentials
                     {localStorage.getItem('trinity_config') && (
-                      <span className="text-green-600 text-xs ml-2">• Config loaded from storage</span>
+                      <div className="flex items-center mt-1">
+                        <span className="text-green-600 text-xs">• Config loaded from storage</span>
+                        {localStorage.getItem('trinity_config_saved') && (
+                          <span className="text-green-700 text-xs ml-2 font-medium">
+                            • Last saved: {new Date(parseInt(localStorage.getItem('trinity_config_saved'))).toLocaleTimeString()}
+                          </span>
+                        )}
+                      </div>
                     )}
                   </CardDescription>
                 </CardHeader>
