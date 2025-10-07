@@ -562,7 +562,15 @@ def run_ymc_scan_on_candles(candles, min_candles_required: Optional[int] = None,
             signal_note = "CANDLE_CLOSE_POI"
         
         rr = (tp_price - entry_price) / (entry_price - sl_price) if (entry_price > sl_price and tp_price is not None) else 0.0
-        outcome = simulate_outcome(candles, entry_idx, entry_price, tp_price, sl_price, signal_time=entry_time)
+        
+        # 🎯 CRITICAL FIX: For live signals, outcome should be PENDING since we can't predict future
+        # Only simulate outcome for backtesting on historical data
+        if allow_intrabar or (entry_time and entry_time >= _now_ist().replace(hour=9, minute=0, second=0, microsecond=0)):
+            # Live signal - outcome is pending
+            outcome = {"result": "PENDING", "hit_index": None, "hit_time": None, "hit_price": None}
+        else:
+            # Historical analysis - can simulate outcome
+            outcome = simulate_outcome(candles, entry_idx, entry_price, tp_price, sl_price, signal_time=entry_time)
         
         signals.append({
             "bos_index": bos_idx,
