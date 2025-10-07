@@ -628,6 +628,33 @@ function App() {
                     </div>
                   </div>
                   
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="min_strike">Min Strike</Label>
+                      <Input
+                        id="min_strike"
+                        type="number"
+                        min="100"
+                        step="100"
+                        value={config.min_strike}
+                        onChange={(e) => setConfig(prev => ({ ...prev, min_strike: parseInt(e.target.value) }))}
+                        data-testid="min-strike-input"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="refresh_sec">Refresh Interval (sec)</Label>
+                      <Input
+                        id="refresh_sec"
+                        type="number"
+                        min="5"
+                        value={config.refresh_sec}
+                        onChange={(e) => setConfig(prev => ({ ...prev, refresh_sec: parseInt(e.target.value) }))}
+                        data-testid="refresh-interval-input"
+                      />
+                    </div>
+                  </div>
+                  
                   <div className="border-t pt-4">
                     <ExpiryDateSelector
                       value={config.only_expiry_dates || []}
