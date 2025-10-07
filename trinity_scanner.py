@@ -21,7 +21,8 @@ except Exception:
     kite_exceptions = None
 
 CONFIG_FILE = "kite_config.json"
-IST = dt.timezone(dt.timedelta(hours=5, minutes=30))
+import pytz
+IST = pytz.timezone('Asia/Kolkata')
 
 # ===== Settings =====
 REFRESH_SEC = 10
