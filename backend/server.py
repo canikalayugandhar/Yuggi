@@ -231,7 +231,7 @@ async def run_scanner_loop():
                             continue
                             
                         except Exception as e:
-                            scanner_state["error_message"] = f"✅ LIVE MODE: Real Kite API detected (Need access token: {str(e)})"
+                            scanner_state["error_message"] = "✅ LIVE MODE"
                             logging.error(f"❌ Kite API failed: {e}")
                             
                             # No mock data - only show clean state
