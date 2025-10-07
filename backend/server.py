@@ -683,6 +683,53 @@ async def reset_signal_outcomes():
         logging.error(f"Reset outcomes error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.post("/scanner/test-outcome/{signal_id}/{outcome}")
+async def test_outcome_update(signal_id: str, outcome: str):
+    """Test outcome update for a specific signal (for debugging)"""
+    try:
+        if outcome not in ["WIN", "LOSS"]:
+            raise HTTPException(status_code=400, detail="Outcome must be WIN or LOSS")
+        
+        # Find signal in database
+        signal = await db.signals.find_one({"id": signal_id})
+        if not signal:
+            raise HTTPException(status_code=404, detail="Signal not found")
+        
+        # Update outcome
+        exit_price = signal.get("tp") if outcome == "WIN" else signal.get("sl")
+        
+        await db.signals.update_one(
+            {"id": signal_id},
+            {
+                "$set": {
+                    "outcome": outcome,
+                    "hit_time": _now_ist(),
+                    "exit_price": exit_price
+                }
+            }
+        )
+        
+        # Update stats and broadcast
+        updated_stats = await calculate_real_stats()
+        
+        await broadcast_message({
+            "type": "outcome_update",
+            "data": {
+                "contract": signal.get("contract"),
+                "underlying": signal.get("underlying"),
+                "outcome": outcome,
+                "exit_price": exit_price,
+                "timestamp": _now_ist().isoformat(),
+                "updated_stats": updated_stats
+            }
+        })
+        
+        return {"message": f"Updated signal {signal_id} to {outcome}", "stats": updated_stats}
+    
+    except Exception as e:
+        logging.error(f"Test outcome error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 async def calculate_real_stats():
     """Calculate statistics from actual database signals with real-time updates"""
     try:
