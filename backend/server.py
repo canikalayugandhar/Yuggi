@@ -457,9 +457,11 @@ async def start_scanner(background_tasks: BackgroundTasks):
     if scanner_state["is_running"]:
         return {"message": "Scanner is already running"}
     
+    # Use hardcoded credentials
     config = scanner_state.get("config", {})
-    if not config.get("api_key") or not config.get("api_secret"):
-        raise HTTPException(status_code=400, detail="Please configure API credentials first")
+    config["api_key"] = "jdhb0gprnxjr1k31"
+    config["api_secret"] = "4qnsimdyhlrgm3tqk7toiosu8u2i9wsg"
+    scanner_state["config"] = config
     
     scanner_state["is_running"] = True
     scanner_state["error_message"] = None
