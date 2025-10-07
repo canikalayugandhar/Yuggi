@@ -368,8 +368,17 @@ function App() {
           </div>
         </div>
 
-        {/* Error Alert */}
-        {scannerStatus.error_message && (
+        {/* Live Mode Status */}
+        {scannerStatus.error_message && scannerStatus.error_message.includes("LIVE MODE") && (
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+            <div className="flex items-center justify-center">
+              <h2 className="text-2xl font-bold text-black">✅ **LIVE MODE**</h2>
+            </div>
+          </div>
+        )}
+        
+        {/* Error Alert - only for actual errors */}
+        {scannerStatus.error_message && !scannerStatus.error_message.includes("LIVE MODE") && (
           <Alert variant="destructive" data-testid="error-alert">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>{scannerStatus.error_message}</AlertDescription>
