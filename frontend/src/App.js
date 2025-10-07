@@ -338,32 +338,57 @@ function App() {
                 </CardContent>
               </Card>
 
-              {/* Top Options */}
-              <Card>
+              {/* ATM Options Table */}
+              <Card className="lg:col-span-2">
                 <CardHeader>
-                  <CardTitle>Top ATM Options</CardTitle>
-                  <CardDescription>High volume options being monitored</CardDescription>
+                  <CardTitle>ATM Options Contracts</CardTitle>
+                  <CardDescription>At-the-money options being monitored with live data</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
-                    {options.slice(0, 5).map((option, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div>
-                          <div className="font-medium">{option.underlying} {option.strike} {option.type}</div>
-                          <div className="text-sm text-gray-600">LTP: {formatCurrency(option.ltp)}</div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-sm">Vol: {option.volume?.toLocaleString()}</div>
-                          <div className="text-xs text-gray-500">Lot: {option.lot}</div>
-                        </div>
-                      </div>
-                    ))}
-                    {options.length === 0 && (
-                      <div className="text-center text-gray-500 py-8">
-                        No options data available. Start the scanner to load data.
-                      </div>
-                    )}
-                  </div>
+                  {options.length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Underlying</TableHead>
+                            <TableHead>Symbol</TableHead>
+                            <TableHead>Strike</TableHead>
+                            <TableHead>Type</TableHead>
+                            <TableHead>LTP</TableHead>
+                            <TableHead>Volume</TableHead>
+                            <TableHead>OI</TableHead>
+                            <TableHead>Investment</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {options.slice(0, 10).map((option, index) => (
+                            <TableRow key={index}>
+                              <TableCell className="font-medium">{option.underlying}</TableCell>
+                              <TableCell className="text-xs font-mono">{option.symbol}</TableCell>
+                              <TableCell>{option.strike}</TableCell>
+                              <TableCell>
+                                <Badge variant={option.type === 'CE' ? 'default' : 'secondary'}>
+                                  {option.type}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="font-medium">{formatCurrency(option.ltp)}</TableCell>
+                              <TableCell>{option.volume?.toLocaleString()}</TableCell>
+                              <TableCell>{option.oi?.toLocaleString() || "N/A"}</TableCell>
+                              <TableCell className="text-green-600 font-medium">
+                                {formatCurrency(option.investment)}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  ) : (
+                    <div className="text-center text-gray-500 py-8">
+                      <Activity className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                      <p>No ATM options data available</p>
+                      <p className="text-sm">Start the scanner to load live contract data</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
