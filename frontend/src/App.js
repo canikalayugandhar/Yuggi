@@ -733,30 +733,16 @@ function App() {
                     />
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="atm_range">ATM Range</Label>
-                      <Input
-                        id="atm_range"
-                        type="number"
-                        min="1"
-                        value={config.atm_range}
-                        onChange={(e) => setConfig(prev => ({ ...prev, atm_range: parseInt(e.target.value) }))}
-                        data-testid="atm-range-input"
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="refresh_sec">Refresh Interval (sec)</Label>
-                      <Input
-                        id="refresh_sec"
-                        type="number"
-                        min="5"
-                        value={config.refresh_sec}
-                        onChange={(e) => setConfig(prev => ({ ...prev, refresh_sec: parseInt(e.target.value) }))}
-                        data-testid="refresh-interval-input"
-                      />
-                    </div>
+                  <div>
+                    <Label htmlFor="atm_range">ATM Range</Label>
+                    <Input
+                      id="atm_range"
+                      type="number"
+                      min="1"
+                      value={config.atm_range}
+                      onChange={(e) => setConfig(prev => ({ ...prev, atm_range: parseInt(e.target.value) }))}
+                      data-testid="atm-range-input"
+                    />
                   </div>
                   
                   <div className="flex items-center space-x-2">
