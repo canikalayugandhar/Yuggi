@@ -671,7 +671,7 @@ async def reset_signal_outcomes():
         raise HTTPException(status_code=500, detail=str(e))
 
 async def calculate_real_stats():
-    """Calculate statistics from actual database signals"""
+    """Calculate statistics from actual database signals with real-time updates"""
     try:
         # Get all signals from database
         all_db_signals = await db.signals.find().to_list(None)
@@ -679,32 +679,37 @@ async def calculate_real_stats():
         total_signals = len(all_db_signals)
         winning_signals = len([s for s in all_db_signals if s.get("outcome") == "WIN"])
         losing_signals = len([s for s in all_db_signals if s.get("outcome") == "LOSS"])
+        pending_signals = len([s for s in all_db_signals if s.get("outcome") == "PENDING"])
         
-        # Calculate P&L based on actual signal data
+        # Calculate P&L based on actual signal outcomes
         total_pnl = 0.0
         for signal in all_db_signals:
             outcome = signal.get("outcome", "")
             lot = signal.get("lot", 1)
             entry_price = signal.get("entry_price", 0)
-            tp = signal.get("tp", 0)
-            sl = signal.get("sl", 0)
+            exit_price = signal.get("exit_price", 0)
             
-            if outcome == "WIN" and tp and entry_price:
-                pnl = (tp - entry_price) * lot
+            if outcome == "WIN" and exit_price and entry_price:
+                pnl = (exit_price - entry_price) * lot
                 total_pnl += pnl
-            elif outcome == "LOSS" and sl and entry_price:
-                pnl = (sl - entry_price) * lot  # This will be negative
+            elif outcome == "LOSS" and exit_price and entry_price:
+                pnl = (exit_price - entry_price) * lot  # This will be negative
                 total_pnl += pnl
+            # PENDING signals don't contribute to P&L
         
-        return {
+        # Update global stats for WebSocket broadcasts
+        scanner_state["stats"] = {
             "total": total_signals,
             "hit": winning_signals,
             "flop": losing_signals,
+            "pending": pending_signals,
             "pnl": round(total_pnl, 2)
         }
+        
+        return scanner_state["stats"]
     except Exception as e:
         logging.error(f"Error calculating stats: {e}")
-        return {"total": 0, "hit": 0, "flop": 0, "pnl": 0.0}
+        return {"total": 0, "hit": 0, "flop": 0, "pending": 0, "pnl": 0.0}
 
 @api_router.get("/scanner/status", response_model=ScannerStatus)
 async def get_scanner_status():
