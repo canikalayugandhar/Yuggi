@@ -234,42 +234,8 @@ async def run_scanner_loop():
                             scanner_state["error_message"] = f"✅ LIVE MODE: Real Kite API detected (Need access token: {str(e)})"
                             logging.error(f"❌ Kite API failed: {e}")
                             
-                            # Even if Kite fails, show ALL ATM contracts for dashboard
-                            import random
-                            mock_options = []
-                            
-                            all_underlyings = [
-                                {"name": "NIFTY", "spot": 25000, "strikes": [24900, 24950, 25000, 25050, 25100], "lot": 50},
-                                {"name": "BANKNIFTY", "spot": 52000, "strikes": [51800, 51900, 52000, 52100, 52200], "lot": 25}, 
-                                {"name": "FINNIFTY", "spot": 23000, "strikes": [22800, 22900, 23000, 23100, 23200], "lot": 40},
-                                {"name": "RELIANCE", "spot": 2800, "strikes": [2750, 2800, 2850], "lot": 250},
-                                {"name": "TCS", "spot": 3600, "strikes": [3550, 3600, 3650], "lot": 125},
-                                {"name": "HDFC", "spot": 1650, "strikes": [1600, 1650, 1700], "lot": 400},
-                                {"name": "ICICIBANK", "spot": 1200, "strikes": [1150, 1200, 1250], "lot": 375}
-                            ]
-                            
-                            for underlying in all_underlyings:
-                                for strike in underlying["strikes"][:2]:  # Top 2 strikes per underlying  
-                                    for option_type in ["CE", "PE"]:
-                                        ltp = random.uniform(20, 300)
-                                        volume = random.randint(5000, 100000)
-                                        oi = random.randint(100000, 900000)
-                                        
-                                        mock_options.append({
-                                            "underlying": underlying["name"],
-                                            "symbol": f"{underlying['name']}25OCT{strike}{option_type}",
-                                            "strike": strike,
-                                            "type": option_type,
-                                            "expiry": "2025-10-25",
-                                            "ltp": round(ltp, 2),
-                                            "volume": volume,
-                                            "oi": oi,
-                                            "lot": underlying["lot"],
-                                            "investment": round(ltp * underlying["lot"], 2)
-                                        })
-                            
-                            mock_options.sort(key=lambda x: x["volume"], reverse=True)
-                            scanner_state["last_options"] = mock_options
+                            # No mock data - only show clean state
+                            scanner_state["last_options"] = []
                             
                             await asyncio.sleep(30)
                             continue
