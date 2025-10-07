@@ -463,10 +463,11 @@ def simulate_outcome(candles, entry_idx, entry_price, tp_price, sl_price, lookah
     return {"result": "NO_HIT", "hit_index": None, "hit_time": None, "hit_price": None}
 
 
-def run_ymc_scan_on_candles(candles, min_candles_required: Optional[int] = None, sl_pct: float = 0.1, tp_pct: float = 0.1):
+def run_ymc_scan_on_candles(candles, min_candles_required: Optional[int] = None, sl_pct: float = 0.1, tp_pct: float = 0.1, allow_intrabar: bool = False):
     signals = []
     search = 0
     threshold = MIN_CANDLES if min_candles_required is None else int(min_candles_required)
+    
     while True:
         sub = candles[search:]
         if len(sub) < SWING_WINDOW * 3 or len(sub) < threshold:
@@ -486,7 +487,7 @@ def run_ymc_scan_on_candles(candles, min_candles_required: Optional[int] = None,
             search = induc_idx + 1
             continue
 
-        # ===== NEW CONDITION: POI must be greater than previous day's low =====
+        # ===== POI must be greater than previous day's low =====
         try:
             poi_dt = candles[poi["index"]].get("date")
             if poi_dt is not None:
@@ -501,37 +502,49 @@ def run_ymc_scan_on_candles(candles, min_candles_required: Optional[int] = None,
         except Exception:
             pass
 
-        # ===== Configurable percentage-based SL/TP =====
-        SL_PCT = sl_pct / 100.0  # convert percentage to decimal
+        # ===== Signal Generation: POI-based Entry =====
+        SL_PCT = sl_pct / 100.0
         TP_PCT = tp_pct / 100.0
 
-        entry_price = round(poi["price"], 2)
+        entry_price = round(poi["price"], 2)  # 🎯 SIGNAL AT POI PRICE
         sl_price = round(entry_price * (1 - SL_PCT), 2)
         tp_price = round(buy_liq * (1 - TP_PCT), 2) if buy_liq is not None else None
 
         poi_time = candles[poi["index"]].get("date") if poi and poi.get("index") is not None else None
         entry_idx = poi["index"]
-        entry_time = poi_time
+        
+        # 🔥 SIGNAL TIMING LOGIC
+        if allow_intrabar:
+            # INTRABAR: Signal immediately when POI is identified (current IST time)
+            entry_time = _now_ist()
+            signal_note = "INTRABAR_POI_HIT"
+        else:
+            # CANDLE CLOSE: Signal at the candle close time where POI was found
+            entry_time = poi_time
+            signal_note = "CANDLE_CLOSE_POI"
+        
         rr = (tp_price - entry_price) / (entry_price - sl_price) if (entry_price > sl_price and tp_price is not None) else 0.0
         outcome = simulate_outcome(candles, entry_idx, entry_price, tp_price, sl_price)
-        signals.append(
-            {
-                "bos_index": bos_idx,
-                "induc_index": induc_idx,
-                "entry_index": entry_idx,
-                "entry_price": entry_price,
-                "sl": sl_price,
-                "tp": tp_price,
-                "rr": round(rr, 2),
-                "outcome": outcome["result"],
-                "bos_time": candles[bos_idx].get("date"),
-                "induc_time": candles[induc_idx].get("date"),
-                "entry_time": entry_time,
-                "poi_time": poi_time,
-                "hit_time": outcome.get("hit_time"),
-                "exit_price": outcome.get("hit_price"),
-            }
-        )
+        
+        signals.append({
+            "bos_index": bos_idx,
+            "induc_index": induc_idx,
+            "entry_index": entry_idx,
+            "entry_price": entry_price,
+            "sl": sl_price,
+            "tp": tp_price,
+            "rr": round(rr, 2),
+            "outcome": outcome["result"],
+            "bos_time": candles[bos_idx].get("date"),
+            "induc_time": candles[induc_idx].get("date"),
+            "entry_time": entry_time,
+            "poi_time": poi_time,
+            "poi_price": entry_price,  # 🎯 POI price for signal
+            "signal_type": signal_note,
+            "hit_time": outcome.get("hit_time"),
+            "exit_price": outcome.get("hit_price"),
+        })
+        
         search = entry_idx + 1
     return signals
 
