@@ -148,14 +148,66 @@ async def run_scanner_loop():
             # Initialize Kite session if not exists
             if not scanner_state["kite_session"]:
                 try:
-                    kite, access_token = ensure_kite_session(
-                        config["api_key"], 
-                        config["api_secret"], 
-                        config.get("access_token")
-                    )
-                    scanner_state["kite_session"] = kite
-                    scanner_state["config"]["access_token"] = access_token
-                    scanner_state["error_message"] = None
+                    # Check if we have valid API credentials
+                    if config["api_key"] and config["api_secret"] and len(config["api_key"]) > 10:
+                        kite, access_token = ensure_kite_session(
+                            config["api_key"], 
+                            config["api_secret"], 
+                            config.get("access_token")
+                        )
+                        scanner_state["kite_session"] = kite
+                        scanner_state["config"]["access_token"] = access_token
+                        scanner_state["error_message"] = None
+                    else:
+                        # Use mock mode for demo purposes
+                        scanner_state["error_message"] = "Demo mode: Using mock data (configure real API credentials for live trading)"
+                        # Generate mock signals for demo
+                        sys.path.append('/app')
+                        from mock_signals import create_mock_signals
+                        mock_signals = create_mock_signals()
+                        scanner_state["last_signals"] = mock_signals
+                        
+                        # Mock options data
+                        mock_options = []
+                        for i in range(10):
+                            underlying = ["NIFTY", "BANKNIFTY"][i % 2]
+                            strike = 25000 + (i * 50)
+                            mock_options.append({
+                                "underlying": underlying,
+                                "symbol": f"{underlying}25OCT{strike}CE",
+                                "strike": strike,
+                                "type": "CE" if i % 2 == 0 else "PE",
+                                "expiry": "2025-10-25",
+                                "ltp": round(50 + (i * 10), 2),
+                                "volume": 1000 + (i * 500),
+                                "oi": 10000 + (i * 1000),
+                                "lot": 50,
+                                "investment": round((50 + i * 10) * 50, 2)
+                            })
+                        scanner_state["last_options"] = mock_options
+                        
+                        # Update stats
+                        scanner_state["stats"] = {
+                            "total": len(mock_signals),
+                            "hit": len([s for s in mock_signals if s["outcome"] == "WIN"]),
+                            "flop": len([s for s in mock_signals if s["outcome"] == "LOSS"]),
+                            "pnl": sum([50.0 if s["outcome"] == "WIN" else -30.0 if s["outcome"] == "LOSS" else 0 for s in mock_signals])
+                        }
+                        
+                        # Broadcast mock updates
+                        await broadcast_message({
+                            "type": "scanner_update",
+                            "data": {
+                                "signals": mock_signals,
+                                "options": mock_options,
+                                "stats": scanner_state["stats"],
+                                "timestamp": _now_ist().isoformat()
+                            }
+                        })
+                        
+                        await asyncio.sleep(config.get("refresh_sec", 10))
+                        continue
+                        
                 except Exception as e:
                     scanner_state["error_message"] = str(e)
                     await asyncio.sleep(30)
