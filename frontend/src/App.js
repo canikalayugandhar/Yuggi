@@ -601,6 +601,24 @@ function App() {
                       />
                     </div>
                   </div>
+                  
+                  <div>
+                    <Label htmlFor="only_expiry_dates">Specific Expiry Dates (Optional)</Label>
+                    <Textarea
+                      id="only_expiry_dates"
+                      value={config.only_expiry_dates?.join(', ') || ''}
+                      onChange={(e) => {
+                        const dates = e.target.value.split(',').map(d => d.trim()).filter(d => d);
+                        setConfig(prev => ({ ...prev, only_expiry_dates: dates }));
+                      }}
+                      placeholder="2025-10-17, 2025-10-24, 2025-10-31 (leave empty for auto-selection)"
+                      className="min-h-[60px]"
+                      data-testid="expiry-dates-input"
+                    />
+                    <div className="text-xs text-gray-500 mt-1">
+                      Enter dates in YYYY-MM-DD format, separated by commas. If empty, scanner will auto-select nearest and weekly expiries.
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
 
