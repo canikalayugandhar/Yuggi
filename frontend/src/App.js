@@ -91,6 +91,32 @@ function App() {
             });
             
             console.log('🎯 LIVE SIGNAL:', newSignal);
+          } else if (data.type === 'outcome_update') {
+            // 🎯 REAL-TIME OUTCOME UPDATE
+            const outcomeData = data.data;
+            
+            // Update signals in state
+            setSignals(prev => prev.map(signal => {
+              if (signal.contract === outcomeData.contract) {
+                return {
+                  ...signal,
+                  outcome: outcomeData.outcome,
+                  exit_price: outcomeData.exit_price
+                };
+              }
+              return signal;
+            }));
+            
+            // Show outcome notification
+            const isWin = outcomeData.outcome === 'WIN';
+            toast({
+              title: isWin ? "🟢 TARGET HIT!" : "🔴 STOP LOSS HIT!",
+              description: `${outcomeData.underlying} ${isWin ? 'reached TP' : 'hit SL'} @ ₹${outcomeData.exit_price}`,
+              variant: isWin ? "default" : "destructive",
+              duration: 7000
+            });
+            
+            console.log('🎯 OUTCOME UPDATE:', outcomeData);
           } else if (data.type === 'scanner_update') {
             // Update dashboard data
             if (data.data.signals) setSignals(prev => [...data.data.signals, ...prev]);
