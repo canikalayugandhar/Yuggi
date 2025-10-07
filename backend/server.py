@@ -156,20 +156,37 @@ async def run_scanner_loop():
                         not api_key.startswith("demo") and 
                         len(api_key) >= 15 and len(api_secret) >= 20):
                         
-                        # REAL API CREDENTIALS - Use Kite Connect
+                        # REAL API CREDENTIALS - Use Kite Connect with daily token management
                         try:
-                            kite, access_token = ensure_kite_session(
+                            # Import token manager
+                            sys.path.append('/app/backend')
+                            from token_manager import get_daily_access_token, save_access_token, clear_old_tokens
+                            
+                            # Clear old tokens first
+                            clear_old_tokens()
+                            
+                            # Try to use today's saved token
+                            saved_token = get_daily_access_token(api_key)
+                            access_token = saved_token or config.get("access_token")
+                            
+                            kite, new_access_token = ensure_kite_session(
                                 api_key, 
                                 api_secret, 
-                                config.get("access_token")
+                                access_token
                             )
+                            
+                            # Save new token for the day if generated
+                            if new_access_token and new_access_token != access_token:
+                                save_access_token(api_key, new_access_token)
+                                scanner_state["config"]["access_token"] = new_access_token
+                            
                             scanner_state["kite_session"] = kite
-                            scanner_state["config"]["access_token"] = access_token
                             scanner_state["error_message"] = None
                             logging.info(f"✅ LIVE MODE: Using real Kite API with key {api_key[:8]}...")
                             
-                            # TODO: Implement real signal generation with live data
-                            # For now, skip mock and do real analysis
+                            # TODO: Implement real signal generation with live market data
+                            # For now, continue with mock until real implementation
+                            logging.info("🔄 Real Kite session established - implementing live data analysis...")
                             await asyncio.sleep(config.get("refresh_sec", 10))
                             continue
                             
