@@ -275,6 +275,12 @@ function App() {
               <span className={`text-sm font-medium ${scannerStatus.is_running ? 'text-green-600' : 'text-gray-500'}`}>
                 {scannerStatus.is_running ? 'Running' : 'Stopped'}
               </span>
+              {scannerStatus.is_running && (
+                <div className="flex items-center space-x-1">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="text-xs text-green-600 font-medium">LIVE</span>
+                </div>
+              )}
             </div>
             
             <Button
