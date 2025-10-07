@@ -89,6 +89,12 @@ def create_mock_signals():
             "created_at": signal_time.isoformat()    # Convert to ISO string
         })
         
-        print(f"DEBUG: {data['underlying']} signal at index {data['time_index']} -> {signal_time.strftime('%H:%M:%S')}")
+        # Validate time is within market hours before adding
+        hour = signal_time.hour
+        if hour < 9 or hour > 15:
+            print(f"❌ REJECTED {data['underlying']} - time {signal_time.strftime('%H:%M:%S')} outside market hours")
+            continue
+        
+        print(f"✅ ACCEPTED {data['underlying']} signal at index {data['time_index']} -> {signal_time.strftime('%H:%M:%S')}")
     
     return signals
