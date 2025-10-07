@@ -53,6 +53,7 @@ function App() {
   const [signals, setSignals] = useState([]);
   const [options, setOptions] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [activeTab, setActiveTab] = useState("dashboard");
   const { toast } = useToast();
 
