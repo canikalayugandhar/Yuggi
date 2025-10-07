@@ -172,22 +172,35 @@ function App() {
   };
 
   const saveConfig = async () => {
+    setSaved(false);
+    setLoading(true);
+    
     try {
-      // Super simple save - no loading state
-      await axios.post(`${API}/scanner/config`, config);
-      toast({
-        title: "✅ Saved!",
-        description: "Configuration updated",
-        variant: "default",
-        duration: 2000
-      });
+      // INSTANT save with timeout
+      await Promise.race([
+        axios.post(`${API}/scanner/config`, config),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 2000))
+      ]);
+      
+      setSaved(true);
+      setLoading(false);
+      
+      // Auto reset after 3 seconds
+      setTimeout(() => setSaved(false), 3000);
+      
     } catch (error) {
-      toast({
-        title: "❌ Error",
-        description: "Save failed",
-        variant: "destructive",
-        duration: 3000
-      });
+      setLoading(false);
+      setSaved(false);
+      alert("Save failed - trying again...");
+      
+      // Try once more immediately
+      try {
+        await axios.post(`${API}/scanner/config`, config);
+        setSaved(true);
+        setTimeout(() => setSaved(false), 3000);
+      } catch (e) {
+        alert("Save failed completely");
+      }
     }
   };
 
