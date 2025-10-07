@@ -547,7 +547,7 @@ def run_ymc_scan_on_candles(candles, min_candles_required: Optional[int] = None,
             "bos_index": bos_idx,
             "induc_index": induc_idx,
             "entry_index": entry_idx,
-            "entry_price": entry_price,
+            "entry_price": entry_price,  # 🎯 LIVE market price (not POI price)
             "sl": sl_price,
             "tp": tp_price,
             "rr": round(rr, 2),
@@ -556,7 +556,8 @@ def run_ymc_scan_on_candles(candles, min_candles_required: Optional[int] = None,
             "induc_time": candles[induc_idx].get("date"),
             "entry_time": entry_time,
             "poi_time": poi_time,
-            "poi_price": entry_price,  # 🎯 POI price for signal
+            "poi_price": round(poi["price"], 2),  # Keep original POI price for analysis
+            "live_entry_price": entry_price,  # Actual tradeable price
             "signal_type": signal_note,
             "hit_time": outcome.get("hit_time"),
             "exit_price": outcome.get("hit_price"),
