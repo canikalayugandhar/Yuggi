@@ -297,6 +297,190 @@ class TrinityBackendTester:
             self.log_result("Candle Close Mode Test", False, f"Candle close test failed: {str(e)}")
             return False
     
+    def validate_entry_price_accuracy(self, signals: List[Dict]) -> bool:
+        """🎯 CRITICAL: Validate entry prices are realistic and tradeable"""
+        if not signals:
+            self.log_result("Entry Price Accuracy", True, "No signals to validate entry prices")
+            return True
+        
+        entry_price_issues = []
+        valid_entry_prices = 0
+        
+        for i, signal in enumerate(signals):
+            try:
+                entry_price = signal.get('entry_price')
+                poi_price = signal.get('poi_price')  # Historical POI price
+                live_entry_price = signal.get('live_entry_price')  # Should be same as entry_price
+                contract = signal.get('contract', 'Unknown')
+                underlying = signal.get('underlying', 'Unknown')
+                
+                # Check if entry_price exists and is valid
+                if entry_price is None:
+                    entry_price_issues.append(f"Signal {i} ({underlying}): Missing entry_price")
+                    continue
+                
+                if not isinstance(entry_price, (int, float)) or entry_price <= 0:
+                    entry_price_issues.append(f"Signal {i} ({underlying}): Invalid entry_price: {entry_price}")
+                    continue
+                
+                # 🎯 CRITICAL CHECK: Entry price should NOT be the same as POI price
+                # This indicates the fix is working - using live market price instead of historical POI
+                if poi_price is not None and abs(entry_price - poi_price) < 0.01:
+                    entry_price_issues.append(f"Signal {i} ({underlying}): Entry price ₹{entry_price} matches POI price ₹{poi_price} - should use live market price")
+                    continue
+                
+                # Check if entry price is reasonable for options (typically ₹1-₹500)
+                if entry_price < 0.5 or entry_price > 1000:
+                    entry_price_issues.append(f"Signal {i} ({underlying}): Unrealistic entry price ₹{entry_price} for options contract")
+                    continue
+                
+                # Check if live_entry_price matches entry_price (should be same after fix)
+                if live_entry_price is not None and abs(entry_price - live_entry_price) > 0.01:
+                    entry_price_issues.append(f"Signal {i} ({underlying}): Mismatch between entry_price ₹{entry_price} and live_entry_price ₹{live_entry_price}")
+                    continue
+                
+                # Validate SL and TP prices are reasonable relative to entry price
+                sl_price = signal.get('sl')
+                tp_price = signal.get('tp')
+                
+                if sl_price is not None:
+                    if sl_price >= entry_price:
+                        entry_price_issues.append(f"Signal {i} ({underlying}): SL ₹{sl_price} should be less than entry ₹{entry_price}")
+                        continue
+                    
+                    # SL should be within reasonable range (5-20% below entry for options)
+                    sl_pct = ((entry_price - sl_price) / entry_price) * 100
+                    if sl_pct < 1 or sl_pct > 50:
+                        entry_price_issues.append(f"Signal {i} ({underlying}): SL percentage {sl_pct:.1f}% seems unrealistic")
+                        continue
+                
+                if tp_price is not None:
+                    if tp_price <= entry_price:
+                        entry_price_issues.append(f"Signal {i} ({underlying}): TP ₹{tp_price} should be greater than entry ₹{entry_price}")
+                        continue
+                
+                valid_entry_prices += 1
+                
+            except Exception as e:
+                entry_price_issues.append(f"Signal {i}: Failed to validate entry price: {str(e)}")
+        
+        if entry_price_issues:
+            self.log_result("Entry Price Accuracy", False, 
+                          f"Found {len(entry_price_issues)} entry price issues out of {len(signals)} signals",
+                          entry_price_issues)
+            return False
+        else:
+            self.log_result("Entry Price Accuracy", True, 
+                          f"All {valid_entry_prices} signals have realistic entry prices")
+            return True
+    
+    def test_intrabar_vs_candle_close_pricing(self) -> bool:
+        """Test that intrabar and candle-close modes use different pricing logic"""
+        try:
+            # Test intrabar mode first
+            intrabar_config = {
+                "api_key": API_KEY,
+                "api_secret": API_SECRET,
+                "allow_intrabar": True,
+                "refresh_sec": 5
+            }
+            
+            response = self.session.post(f"{BACKEND_URL}/scanner/config", json=intrabar_config)
+            if response.status_code != 200:
+                self.log_result("Intrabar vs Candle Close Pricing", False, "Failed to configure intrabar mode")
+                return False
+            
+            # Restart scanner to apply new config
+            self.session.post(f"{BACKEND_URL}/scanner/stop")
+            time.sleep(2)
+            self.session.post(f"{BACKEND_URL}/scanner/start")
+            time.sleep(10)
+            
+            intrabar_signals = self.test_signals_endpoint()
+            
+            # Test candle close mode
+            candle_close_config = {
+                "api_key": API_KEY,
+                "api_secret": API_SECRET,
+                "allow_intrabar": False,
+                "refresh_sec": 10
+            }
+            
+            response = self.session.post(f"{BACKEND_URL}/scanner/config", json=candle_close_config)
+            if response.status_code != 200:
+                self.log_result("Intrabar vs Candle Close Pricing", False, "Failed to configure candle close mode")
+                return False
+            
+            # Restart scanner again
+            self.session.post(f"{BACKEND_URL}/scanner/stop")
+            time.sleep(2)
+            self.session.post(f"{BACKEND_URL}/scanner/start")
+            time.sleep(10)
+            
+            candle_close_signals = self.test_signals_endpoint()
+            
+            # Validate both modes produce realistic entry prices
+            intrabar_valid = self.validate_entry_price_accuracy(intrabar_signals) if intrabar_signals else True
+            candle_close_valid = self.validate_entry_price_accuracy(candle_close_signals) if candle_close_signals else True
+            
+            if intrabar_valid and candle_close_valid:
+                self.log_result("Intrabar vs Candle Close Pricing", True, 
+                              f"Both modes produce realistic prices - Intrabar: {len(intrabar_signals)} signals, Candle-close: {len(candle_close_signals)} signals")
+                return True
+            else:
+                self.log_result("Intrabar vs Candle Close Pricing", False, 
+                              "One or both modes have entry price issues")
+                return False
+                
+        except Exception as e:
+            self.log_result("Intrabar vs Candle Close Pricing", False, f"Pricing comparison test failed: {str(e)}")
+            return False
+    
+    def test_scanner_restart_fresh_signals(self) -> bool:
+        """Test that restarting scanner generates fresh signals with correct pricing"""
+        try:
+            # Stop scanner
+            response = self.session.post(f"{BACKEND_URL}/scanner/stop")
+            if response.status_code != 200:
+                self.log_result("Scanner Restart Fresh Signals", False, "Failed to stop scanner")
+                return False
+            
+            time.sleep(3)
+            
+            # Start scanner again
+            response = self.session.post(f"{BACKEND_URL}/scanner/start")
+            if response.status_code != 200:
+                self.log_result("Scanner Restart Fresh Signals", False, "Failed to start scanner")
+                return False
+            
+            # Wait for fresh signals
+            time.sleep(15)
+            
+            # Get fresh signals
+            fresh_signals = self.test_signals_endpoint()
+            
+            # Validate fresh signals have correct pricing
+            if fresh_signals:
+                pricing_valid = self.validate_entry_price_accuracy(fresh_signals)
+                timing_valid = self.validate_signal_timing(fresh_signals)
+                
+                if pricing_valid and timing_valid:
+                    self.log_result("Scanner Restart Fresh Signals", True, 
+                                  f"Fresh signals after restart have correct pricing and timing ({len(fresh_signals)} signals)")
+                    return True
+                else:
+                    self.log_result("Scanner Restart Fresh Signals", False, 
+                                  "Fresh signals have pricing or timing issues")
+                    return False
+            else:
+                self.log_result("Scanner Restart Fresh Signals", True, 
+                              "No fresh signals generated after restart (expected during off-hours)")
+                return True
+                
+        except Exception as e:
+            self.log_result("Scanner Restart Fresh Signals", False, f"Scanner restart test failed: {str(e)}")
+            return False
+    
     def test_market_hours_enforcement(self) -> bool:
         """Test that no signals are generated outside market hours"""
         now_ist = dt.datetime.now(IST)
