@@ -231,6 +231,7 @@ function App() {
     
     // Immediate localStorage save (happens instantly)
     localStorage.setItem('trinity_config', JSON.stringify(config));
+    localStorage.setItem('trinity_config_saved', Date.now().toString()); // Save timestamp
     
     // Instant success feedback (no waiting for backend)
     setTimeout(() => {
@@ -251,10 +252,13 @@ function App() {
       
     }, 200); // Just 200ms for visual feedback
     
-    // Reset status after 4 seconds
+    // Keep saved status longer when user stays on settings page
     setTimeout(() => {
-      setSaveStatus('idle');
-    }, 4200);
+      if (activeTab === 'settings') {
+        // Only reset if still on settings tab
+        setSaveStatus('idle');
+      }
+    }, 10000); // 10 seconds instead of 4
   };
 
   const startScanner = async () => {
