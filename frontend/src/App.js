@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Toaster } from "@/components/ui/toaster";
 import { Play, Square, Settings, Activity, TrendingUp, AlertCircle, CheckCircle2 } from "lucide-react";
+import ExpiryDateSelector from "@/components/ExpiryDateSelector";
 import "./App.css";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
