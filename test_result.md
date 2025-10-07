@@ -144,10 +144,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Signal Timing Validation"
     - "DateTime Display Formatting"
-  stuck_tasks:
-    - "Signal Timing Validation"
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
