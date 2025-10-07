@@ -212,10 +212,28 @@ function App() {
 
   const loadScannerStatus = async () => {
     try {
-      const response = await axios.get(`${API}/scanner/status`);
+      const response = await axios.get(`${API}/scanner/status`, {
+        timeout: 8000 // 8 second timeout
+      });
+      
+      console.log('📊 Scanner status response:', response.data);
       setScannerStatus(response.data);
+      
+      // Also check if LIVE MODE should be displayed
+      if (response.data.is_running) {
+        console.log('✅ Scanner is running');
+      } else {
+        console.log('🔴 Scanner is stopped');
+      }
+      
     } catch (error) {
       console.error("Failed to load scanner status:", error);
+      
+      // Set a default error state
+      setScannerStatus(prev => ({
+        ...prev,
+        error_message: "Unable to connect to scanner service"
+      }));
     }
   };
 
