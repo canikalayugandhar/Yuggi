@@ -334,6 +334,17 @@ async def run_scanner_loop():
                     }
                     new_signals.append(signal_data)
 
+                    # 🔥 INSTANT LIVE SIGNAL BROADCAST
+                    await broadcast_message({
+                        "type": "live_signal",
+                        "data": {
+                            "signal": signal_data,
+                            "timestamp": _now_ist().isoformat(),
+                            "mode": "INTRABAR" if config.get("allow_intrabar", False) else "CANDLE_CLOSE"
+                        }
+                    })
+                    logging.info(f"🚀 LIVE SIGNAL: {signal_data['underlying']} {signal_data['contract']} @ ₹{signal_data['entry_price']}")
+
                     # Send Telegram notification if enabled
                     if config.get("telegram_enabled") and config.get("telegram_bot_token") and config.get("telegram_chat_id"):
                         telegram_text = format_single_signal(sig)
