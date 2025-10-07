@@ -686,6 +686,8 @@ def options_rows_to_signals(kite, rows, sl_pct: float = 0.1, tp_pct: float = 0.1
                     continue
             if len(candles) < MIN_CANDLES:
                 continue
+            # Get live market data for realistic entry prices
+            live_ltp = None
             if allow_intrabar:
                 try:
                     qkey = f"NFO:{row.get('symbol')}"
