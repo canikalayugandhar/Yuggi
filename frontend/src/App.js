@@ -370,9 +370,9 @@ function App() {
 
         {/* Live Mode Status */}
         {scannerStatus.error_message && scannerStatus.error_message.includes("LIVE MODE") && (
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-sm">
             <div className="flex items-center justify-center">
-              <h2 className="text-2xl font-bold text-black">✅ **LIVE MODE**</h2>
+              <h1 className="text-3xl font-black text-black tracking-wide">✅ LIVE MODE</h1>
             </div>
           </div>
         )}
