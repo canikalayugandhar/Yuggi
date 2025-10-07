@@ -288,8 +288,21 @@ function App() {
         timeout: 12000 // 12 second timeout for signals
       });
       
-      console.log('🎯 Signals response:', response.data?.length, 'signals loaded');
-      setSignals(response.data || []);
+      const signalsList = response.data || [];
+      console.log('🎯 Signals response:', signalsList.length, 'signals loaded');
+      
+      // Update signals
+      setSignals(signalsList);
+      
+      // 🎯 SIMPLE STATS UPDATE: Calculate stats directly from loaded signals
+      const calculatedStats = calculateStatsFromSignals(signalsList);
+      setScannerStatus(prev => ({
+        ...prev,
+        stats: calculatedStats
+      }));
+      
+      console.log('📊 Stats calculated from signals:', calculatedStats);
+      
     } catch (error) {
       console.error("Failed to load signals:", error);
       // Keep existing signals on error
