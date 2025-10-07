@@ -111,11 +111,14 @@ backend:
     file: "trinity_scanner.py"
     stuck_count: 3
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "user"
         comment: "User reports signals showing at 04:45 AM, 06:45 AM outside market hours - critical bug"
+      - working: false
+        agent: "testing"
+        comment: "CRITICAL BUG CONFIRMED: Found 17 signals with incorrect timestamps (03:37:00, 04:22:00, 06:22:00, 06:37:00, 07:07:00, 08:37:00 IST) outside market hours (should be 09:15-15:30). Root cause: Historical candle data from Kite API has incorrect timezone info, and _parse_to_dtobj() in trinity_scanner.py is not properly converting to IST. Signals use poi_time from historical candles instead of current market time. Also timezone offset shows +05:53 instead of +05:30 for IST."
 
 frontend:
   - task: "DateTime Display Formatting"
