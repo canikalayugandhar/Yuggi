@@ -55,6 +55,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saveStatus, setSaveStatus] = useState('idle'); // 'idle', 'saving', 'saved', 'error'
+  const [currentTime, setCurrentTime] = useState(new Date());
   const [activeTab, setActiveTab] = useState("dashboard");
   const { toast } = useToast();
 
