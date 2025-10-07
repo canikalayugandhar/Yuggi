@@ -545,6 +545,25 @@ async def cleanup_invalid_signals():
         logging.error(f"Cleanup error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.post("/scanner/reset-outcomes")
+async def reset_signal_outcomes():
+    """Reset all signal outcomes to PENDING for live trading"""
+    try:
+        result = await db.signals.update_many(
+            {},  # All signals
+            {"$set": {"outcome": "PENDING"}}
+        )
+        
+        # Update in-memory signals too
+        for signal in scanner_state.get("last_signals", []):
+            signal["outcome"] = "PENDING"
+        
+        return {"message": f"Reset {result.modified_count} signal outcomes to PENDING for live trading."}
+    
+    except Exception as e:
+        logging.error(f"Reset outcomes error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 async def calculate_real_stats():
     """Calculate statistics from actual database signals"""
     try:
