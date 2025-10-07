@@ -341,19 +341,16 @@ async def run_scanner_loop():
                 # Process new signals
                 new_signals = []
                 for sig in signals:
-                    # Ensure signal_time is properly formatted in IST
-                    signal_time_raw = sig.get("_entry_dt") or sig.get("entry_time")
-                    if signal_time_raw:
-                        if hasattr(signal_time_raw, 'astimezone'):
-                            signal_time = signal_time_raw.astimezone(pytz.timezone('Asia/Kolkata'))
-                        else:
-                            signal_time = _now_ist()
-                    else:
-                        signal_time = _now_ist()
+                    # 🎯 CRITICAL FIX: Force all signals to use current IST market time
+                    # This prevents timezone issues from historical candle data
+                    current_ist = _now_ist()
                     
-                    # Validate signal is within market hours before adding
-                    if not _within_market_hours(signal_time):
+                    # Double validation: only generate signals during market hours
+                    if not _within_market_hours(current_ist):
                         continue
+                    
+                    # Always use current market time for signal timestamp
+                    signal_time = current_ist
                     
                     signal_data = {
                         "id": str(uuid.uuid4()),
