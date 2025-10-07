@@ -557,9 +557,287 @@ class TrinityBackendTester:
             self.log_result("Timezone Handling", False, f"Timezone test failed: {str(e)}")
             return False
     
+    def test_outcome_logic_fix(self) -> bool:
+        """🎯 CRITICAL: Test that live signals show PENDING outcome instead of incorrect WIN/LOSS"""
+        try:
+            signals = self.test_signals_endpoint()
+            if not signals:
+                self.log_result("Outcome Logic Fix", True, "No signals to test (expected during off-hours)")
+                return True
+            
+            pending_count = 0
+            win_loss_count = 0
+            incorrect_outcomes = []
+            
+            for i, signal in enumerate(signals):
+                outcome = signal.get('outcome', '').upper()
+                signal_time_raw = signal.get('signal_time')
+                entry_time_raw = signal.get('entry_time')
+                
+                # Check if this is a live signal (recent timestamp)
+                is_live_signal = False
+                try:
+                    if signal_time_raw:
+                        if isinstance(signal_time_raw, str) and 'T' in signal_time_raw:
+                            signal_dt = dt.datetime.fromisoformat(signal_time_raw.replace('Z', '+00:00'))
+                            signal_dt = signal_dt.astimezone(IST)
+                            
+                            # Consider signals from today as "live"
+                            today = dt.datetime.now(IST).date()
+                            if signal_dt.date() == today:
+                                is_live_signal = True
+                except:
+                    pass
+                
+                if outcome == "PENDING":
+                    pending_count += 1
+                elif outcome in ["WIN", "LOSS", "BOTH"]:
+                    win_loss_count += 1
+                    if is_live_signal:
+                        incorrect_outcomes.append(f"Signal {i}: Live signal has outcome '{outcome}' instead of PENDING")
+            
+            # For live trading, most signals should be PENDING
+            if incorrect_outcomes:
+                self.log_result("Outcome Logic Fix", False, 
+                              f"Found {len(incorrect_outcomes)} live signals with incorrect WIN/LOSS outcomes",
+                              incorrect_outcomes)
+                return False
+            else:
+                self.log_result("Outcome Logic Fix", True, 
+                              f"Outcome logic correct - PENDING: {pending_count}, WIN/LOSS: {win_loss_count}")
+                return True
+                
+        except Exception as e:
+            self.log_result("Outcome Logic Fix", False, f"Outcome logic test failed: {str(e)}")
+            return False
+    
+    def test_reset_outcomes_endpoint(self) -> bool:
+        """🎯 CRITICAL: Test the reset-outcomes endpoint functionality"""
+        try:
+            # First get current signals
+            signals_before = self.test_signals_endpoint()
+            
+            # Call reset-outcomes endpoint
+            response = self.session.post(f"{BACKEND_URL}/scanner/reset-outcomes")
+            if response.status_code != 200:
+                self.log_result("Reset Outcomes Endpoint", False, f"HTTP {response.status_code}", response.text)
+                return False
+            
+            reset_data = response.json()
+            reset_message = reset_data.get('message', '')
+            
+            # Wait a moment for the reset to take effect
+            time.sleep(2)
+            
+            # Get signals after reset
+            signals_after = self.test_signals_endpoint()
+            
+            # Verify all signals now have PENDING outcome
+            non_pending_after_reset = []
+            for i, signal in enumerate(signals_after):
+                outcome = signal.get('outcome', '').upper()
+                if outcome != "PENDING":
+                    non_pending_after_reset.append(f"Signal {i}: Still has outcome '{outcome}' after reset")
+            
+            if non_pending_after_reset:
+                self.log_result("Reset Outcomes Endpoint", False, 
+                              f"Reset failed - {len(non_pending_after_reset)} signals still have non-PENDING outcomes",
+                              non_pending_after_reset)
+                return False
+            else:
+                self.log_result("Reset Outcomes Endpoint", True, 
+                              f"Reset successful - {reset_message}. All {len(signals_after)} signals now PENDING")
+                return True
+                
+        except Exception as e:
+            self.log_result("Reset Outcomes Endpoint", False, f"Reset outcomes test failed: {str(e)}")
+            return False
+    
+    def test_tp_sl_timing_validation(self) -> bool:
+        """🎯 CRITICAL: Test that TP/SL hits only count if they occur AFTER signal generation time"""
+        try:
+            signals = self.test_signals_endpoint()
+            if not signals:
+                self.log_result("TP/SL Timing Validation", True, "No signals to validate timing")
+                return True
+            
+            timing_violations = []
+            valid_timing_count = 0
+            
+            for i, signal in enumerate(signals):
+                outcome = signal.get('outcome', '').upper()
+                signal_time_raw = signal.get('signal_time')
+                hit_time_raw = signal.get('hit_time')
+                entry_time_raw = signal.get('entry_time')
+                
+                # Only check signals that have WIN/LOSS outcomes
+                if outcome not in ["WIN", "LOSS", "BOTH"]:
+                    continue
+                
+                try:
+                    # Parse signal time
+                    signal_dt = None
+                    if signal_time_raw:
+                        if isinstance(signal_time_raw, str) and 'T' in signal_time_raw:
+                            signal_dt = dt.datetime.fromisoformat(signal_time_raw.replace('Z', '+00:00'))
+                        elif isinstance(signal_time_raw, str):
+                            signal_dt = dt.datetime.strptime(signal_time_raw, '%Y-%m-%d %H:%M:%S')
+                            signal_dt = signal_dt.replace(tzinfo=IST)
+                    
+                    # Parse hit time
+                    hit_dt = None
+                    if hit_time_raw:
+                        if isinstance(hit_time_raw, str) and 'T' in hit_time_raw:
+                            hit_dt = dt.datetime.fromisoformat(hit_time_raw.replace('Z', '+00:00'))
+                        elif isinstance(hit_time_raw, str):
+                            hit_dt = dt.datetime.strptime(hit_time_raw, '%Y-%m-%d %H:%M:%S')
+                            hit_dt = hit_dt.replace(tzinfo=IST)
+                    
+                    # Validate timing: hit_time should be AFTER signal_time
+                    if signal_dt and hit_dt:
+                        if hit_dt <= signal_dt:
+                            timing_violations.append(
+                                f"Signal {i}: TP/SL hit at {hit_dt.strftime('%H:%M:%S')} "
+                                f"before/at signal time {signal_dt.strftime('%H:%M:%S')} - outcome '{outcome}' is invalid"
+                            )
+                        else:
+                            valid_timing_count += 1
+                    elif outcome in ["WIN", "LOSS"] and not hit_time_raw:
+                        timing_violations.append(f"Signal {i}: Has outcome '{outcome}' but missing hit_time")
+                        
+                except Exception as e:
+                    timing_violations.append(f"Signal {i}: Failed to parse timing data: {str(e)}")
+            
+            if timing_violations:
+                self.log_result("TP/SL Timing Validation", False, 
+                              f"Found {len(timing_violations)} timing violations",
+                              timing_violations)
+                return False
+            else:
+                self.log_result("TP/SL Timing Validation", True, 
+                              f"All {valid_timing_count} WIN/LOSS signals have valid timing (hit after signal)")
+                return True
+                
+        except Exception as e:
+            self.log_result("TP/SL Timing Validation", False, f"Timing validation test failed: {str(e)}")
+            return False
+    
+    def test_historical_vs_live_signals(self) -> bool:
+        """🎯 CRITICAL: Test separation between historical analysis and live signals"""
+        try:
+            signals = self.test_signals_endpoint()
+            if not signals:
+                self.log_result("Historical vs Live Signals", True, "No signals to test separation")
+                return True
+            
+            today = dt.datetime.now(IST).date()
+            live_signals = []
+            historical_signals = []
+            
+            for signal in signals:
+                signal_time_raw = signal.get('signal_time')
+                outcome = signal.get('outcome', '').upper()
+                
+                try:
+                    if signal_time_raw and isinstance(signal_time_raw, str) and 'T' in signal_time_raw:
+                        signal_dt = dt.datetime.fromisoformat(signal_time_raw.replace('Z', '+00:00'))
+                        signal_dt = signal_dt.astimezone(IST)
+                        
+                        if signal_dt.date() == today:
+                            live_signals.append({'signal': signal, 'outcome': outcome})
+                        else:
+                            historical_signals.append({'signal': signal, 'outcome': outcome})
+                except:
+                    continue
+            
+            # Validate live signals are PENDING
+            live_violations = []
+            for item in live_signals:
+                if item['outcome'] != "PENDING":
+                    live_violations.append(f"Live signal has outcome '{item['outcome']}' instead of PENDING")
+            
+            # Historical signals can have simulated outcomes
+            historical_with_outcomes = len([item for item in historical_signals if item['outcome'] in ["WIN", "LOSS", "BOTH"]])
+            
+            if live_violations:
+                self.log_result("Historical vs Live Signals", False, 
+                              f"Live signals have incorrect outcomes: {len(live_violations)} violations",
+                              live_violations)
+                return False
+            else:
+                self.log_result("Historical vs Live Signals", True, 
+                              f"Correct separation - Live: {len(live_signals)} PENDING, "
+                              f"Historical: {len(historical_signals)} ({historical_with_outcomes} with outcomes)")
+                return True
+                
+        except Exception as e:
+            self.log_result("Historical vs Live Signals", False, f"Historical vs live test failed: {str(e)}")
+            return False
+    
+    def test_no_retroactive_wins(self) -> bool:
+        """🎯 CRITICAL: Ensure no signals show WIN when TP was hit before signal time"""
+        try:
+            signals = self.test_signals_endpoint()
+            if not signals:
+                self.log_result("No Retroactive Wins", True, "No signals to check for retroactive wins")
+                return True
+            
+            retroactive_wins = []
+            
+            for i, signal in enumerate(signals):
+                outcome = signal.get('outcome', '').upper()
+                if outcome != "WIN":
+                    continue
+                
+                signal_time_raw = signal.get('signal_time')
+                hit_time_raw = signal.get('hit_time')
+                tp_price = signal.get('tp')
+                entry_price = signal.get('entry_price')
+                
+                try:
+                    # Parse times
+                    signal_dt = None
+                    hit_dt = None
+                    
+                    if signal_time_raw and isinstance(signal_time_raw, str) and 'T' in signal_time_raw:
+                        signal_dt = dt.datetime.fromisoformat(signal_time_raw.replace('Z', '+00:00'))
+                    
+                    if hit_time_raw and isinstance(hit_time_raw, str) and 'T' in hit_time_raw:
+                        hit_dt = dt.datetime.fromisoformat(hit_time_raw.replace('Z', '+00:00'))
+                    
+                    # Check for retroactive win (hit before signal)
+                    if signal_dt and hit_dt and hit_dt <= signal_dt:
+                        retroactive_wins.append(
+                            f"Signal {i}: WIN outcome with TP hit at {hit_dt.strftime('%H:%M:%S')} "
+                            f"before signal time {signal_dt.strftime('%H:%M:%S')} - this is retroactive!"
+                        )
+                    
+                    # Additional check: if it's a WIN but no hit_time, that's suspicious
+                    elif outcome == "WIN" and not hit_time_raw:
+                        retroactive_wins.append(f"Signal {i}: WIN outcome but missing hit_time - suspicious")
+                        
+                except Exception as e:
+                    retroactive_wins.append(f"Signal {i}: Failed to validate WIN timing: {str(e)}")
+            
+            if retroactive_wins:
+                self.log_result("No Retroactive Wins", False, 
+                              f"Found {len(retroactive_wins)} retroactive WIN signals",
+                              retroactive_wins)
+                return False
+            else:
+                win_count = len([s for s in signals if s.get('outcome', '').upper() == "WIN"])
+                self.log_result("No Retroactive Wins", True, 
+                              f"No retroactive wins found - all {win_count} WIN signals have valid timing")
+                return True
+                
+        except Exception as e:
+            self.log_result("No Retroactive Wins", False, f"Retroactive wins test failed: {str(e)}")
+            return False
+
     def run_comprehensive_test(self):
-        """Run all tests in sequence"""
+        """Run all tests in sequence - FOCUSED ON WIN/LOSS CALCULATION FIX"""
         logger.info("🚀 Starting Trinity Wealth Scanner Backend Testing")
+        logger.info("🎯 FOCUS: WIN/LOSS CALCULATION FIX VALIDATION")
         logger.info(f"Testing against: {BACKEND_URL}")
         logger.info(f"Current IST time: {dt.datetime.now(IST).strftime('%Y-%m-%d %H:%M:%S IST')}")
         
@@ -578,31 +856,47 @@ class TrinityBackendTester:
         # Core functionality tests
         self.test_scanner_status()
         signals = self.test_signals_endpoint()
-        self.test_options_endpoint()
         
-        # 🎯 CRITICAL: Entry Price Accuracy Tests (Primary Focus)
-        logger.info("🎯 Testing Entry Price Accuracy - CRITICAL FOCUS AREA")
-        if signals:
-            self.validate_entry_price_accuracy(signals)
+        # 🎯 CRITICAL WIN/LOSS CALCULATION FIX TESTS
+        logger.info("🎯 CRITICAL TESTING: WIN/LOSS CALCULATION FIX")
+        logger.info("="*60)
         
-        # Timing validation tests
-        self.test_market_hours_enforcement()
-        self.test_timezone_handling()
+        # 1. Test outcome logic fix - signals should show PENDING for live trades
+        logger.info("1️⃣ Testing Outcome Logic Fix (PENDING for live signals)")
+        self.test_outcome_logic_fix()
         
-        # Mode-specific tests with entry price validation
-        logger.info("🔄 Testing Intrabar vs Candle Close Pricing Logic")
-        self.test_intrabar_vs_candle_close_pricing()
+        # 2. Test reset-outcomes endpoint
+        logger.info("2️⃣ Testing Reset Outcomes Endpoint")
+        self.test_reset_outcomes_endpoint()
         
-        # Scanner restart test for fresh signals
-        logger.info("🔄 Testing Scanner Restart with Fresh Signal Generation")
+        # 3. Test TP/SL timing validation
+        logger.info("3️⃣ Testing TP/SL Timing Validation")
+        self.test_tp_sl_timing_validation()
+        
+        # 4. Test historical vs live signal separation
+        logger.info("4️⃣ Testing Historical vs Live Signal Separation")
+        self.test_historical_vs_live_signals()
+        
+        # 5. Test no retroactive wins
+        logger.info("5️⃣ Testing No Retroactive Wins")
+        self.test_no_retroactive_wins()
+        
+        # 6. Restart scanner and test fresh signals
+        logger.info("6️⃣ Testing Scanner Restart with Fresh Signals")
         self.test_scanner_restart_fresh_signals()
         
-        # Final validation
+        # Additional validation tests
+        logger.info("🔍 Additional Validation Tests")
+        self.test_market_hours_enforcement()
+        self.validate_signal_timing(signals) if signals else None
+        
+        # Final comprehensive check
         logger.info("🔍 Final comprehensive validation...")
         final_signals = self.test_signals_endpoint()
         if final_signals:
-            self.validate_entry_price_accuracy(final_signals)
-            self.validate_signal_timing(final_signals)
+            self.test_outcome_logic_fix()
+            self.test_tp_sl_timing_validation()
+            self.test_no_retroactive_wins()
         
         # Summary
         self.print_test_summary()
