@@ -118,12 +118,23 @@ A comprehensive full-stack web application for real-time options trading signal 
 ### **Advanced Settings**
 ```json
 {
-  "underlyings": ["NIFTY", "BANKNIFTY"],  // Specific indices (empty = all)
-  "atm_range": 1,                         // Strikes around ATM
-  "refresh_sec": 10,                      // Scan interval seconds
-  "allow_intrabar": false                 // Enable intrabar analysis
+  "underlyings": ["NIFTY", "BANKNIFTY"],        // Specific indices (empty = all)
+  "atm_range": 1,                               // Strikes around ATM
+  "refresh_sec": 10,                            // Scan interval seconds
+  "allow_intrabar": false,                      // Enable intrabar analysis
+  "only_expiry_dates": ["2025-10-17", "2025-10-24"]  // Specific expiry dates
 }
 ```
+
+### **Expiry Date Selection**
+The Trading Settings now includes a sophisticated expiry date selector:
+
+- **Auto-Selection (Default)**: Leave empty for automatic selection of nearest and weekly expiries
+- **Manual Selection**: Use the date picker to add specific expiry dates
+- **Quick Select**: Choose from suggested typical expiry Thursdays
+- **Monthly Expiries**: Automatically highlighted in the suggestions
+- **Multiple Dates**: Select as many expiry dates as needed
+- **Visual Management**: Easy-to-remove badge interface for selected dates
 
 ### **Telegram Integration**
 ```json
