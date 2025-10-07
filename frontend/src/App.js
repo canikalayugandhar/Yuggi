@@ -82,6 +82,15 @@ function App() {
     }
   }, [activeTab]);
 
+  // Real-time clock update
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000); // Update every second
+    
+    return () => clearInterval(timer);
+  }, []);
+
   // WebSocket and polling setup
   useEffect(() => {
     // 🚀 WebSocket connection for LIVE signals
