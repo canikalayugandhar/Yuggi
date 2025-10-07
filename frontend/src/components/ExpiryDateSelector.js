@@ -9,35 +9,7 @@ const ExpiryDateSelector = ({ value = [], onChange, ...props }) => {
   const [newDate, setNewDate] = useState('');
   const [suggestedDates, setSuggestedDates] = useState([]);
 
-  useEffect(() => {
-    // Generate suggested expiry dates (Thursdays typically)
-    const suggestions = [];
-    const today = new Date();
-    
-    // Find next 8 Thursdays (typical expiry days)
-    for (let i = 0; i < 60; i++) {
-      const date = new Date(today);
-      date.setDate(today.getDate() + i);
-      
-      // Check if it's Thursday (4) or the last Thursday of the month
-      if (date.getDay() === 4) {
-        const dateStr = date.toISOString().split('T')[0];
-        suggestions.push({
-          date: dateStr,
-          label: date.toLocaleDateString('en-US', { 
-            weekday: 'short', 
-            month: 'short', 
-            day: 'numeric' 
-          }),
-          isMonthly: isLastThursday(date)
-        });
-        
-        if (suggestions.length >= 8) break;
-      }
-    }
-    
-    setSuggestedDates(suggestions);
-  }, []);
+  // Removed suggested dates generation as requested
 
   const isLastThursday = (date) => {
     const nextWeek = new Date(date);
