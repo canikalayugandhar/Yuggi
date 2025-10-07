@@ -536,39 +536,41 @@ function App() {
           </div>
         </div>
 
-        {/* Live Mode Status with Date/Time */}
-        {scannerStatus.is_running && (
-          <div className="bg-white border border-gray-300 rounded-lg p-4 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div className="text-left">
-                <div className="text-lg font-semibold text-gray-800">
-                  {currentTime.toLocaleDateString('en-IN', {
-                    timeZone: 'Asia/Kolkata',
-                    weekday: 'long',
-                    year: 'numeric', 
-                    month: 'long',
-                    day: 'numeric'
-                  })}
-                </div>
-                <div className="text-md font-mono text-gray-600">
-                  {currentTime.toLocaleTimeString('en-IN', {
-                    timeZone: 'Asia/Kolkata',
-                    hour12: false,
-                    hour: '2-digit',
-                    minute: '2-digit', 
-                    second: '2-digit'
-                  })} IST
-                </div>
+        {/* Date/Time Row - Always Show with LIVE MODE when running */}
+        <div className="bg-white border border-gray-300 rounded-lg p-4 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div className="text-left">
+              <div className="text-lg font-semibold text-gray-800">
+                {currentTime.toLocaleDateString('en-IN', {
+                  timeZone: 'Asia/Kolkata',
+                  weekday: 'long',
+                  year: 'numeric', 
+                  month: 'long',
+                  day: 'numeric'
+                })}
               </div>
-              <div className="text-right">
-                <h1 className="text-2xl font-black text-black tracking-wide">✅ LIVE MODE</h1>
+              <div className="text-md font-mono text-gray-600">
+                {currentTime.toLocaleTimeString('en-IN', {
+                  timeZone: 'Asia/Kolkata',
+                  hour12: false,
+                  hour: '2-digit',
+                  minute: '2-digit', 
+                  second: '2-digit'
+                })} IST
               </div>
             </div>
+            <div className="text-right">
+              {scannerStatus.is_running ? (
+                <h1 className="text-2xl font-black text-black tracking-wide">✅ LIVE MODE</h1>
+              ) : (
+                <h1 className="text-2xl font-black text-gray-500 tracking-wide">🔴 OFFLINE</h1>
+              )}
+            </div>
           </div>
-        )}
+        </div>
         
-        {/* Error Alert - only for actual errors */}
-        {scannerStatus.error_message && !scannerStatus.error_message.includes("LIVE MODE") && (
+        {/* Error Alert - only for connection errors */}
+        {scannerStatus.error_message && (
           <Alert variant="destructive" data-testid="error-alert">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>{scannerStatus.error_message}</AlertDescription>
