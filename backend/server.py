@@ -451,11 +451,8 @@ async def update_scanner_config(config: ScannerConfig):
 
 @api_router.get("/scanner/config")
 async def get_scanner_config():
-    """Get current scanner configuration"""
-    config_doc = await db.scanner_configs.find_one({"id": "scanner_config"})
-    if config_doc:
-        return config_doc.get("config", {})
-    return {}
+    """Get current scanner configuration - SIMPLE & FAST"""
+    return scanner_state.get("config", {})
 
 @api_router.post("/scanner/start")
 async def start_scanner(background_tasks: BackgroundTasks):
