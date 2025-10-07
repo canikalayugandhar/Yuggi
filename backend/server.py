@@ -827,42 +827,31 @@ async def get_scanner_status():
 
 @api_router.get("/scanner/signals")
 async def get_signals():
-    """Get recent signals"""
+    """Get recent signals - SIMPLE AND DIRECT"""
     try:
-        # Get signals from database with proper error handling
-        signals = await db.signals.find().sort("created_at", -1).limit(100).to_list(100)
+        # Direct database query - no complex processing
+        signals = await db.signals.find({}).to_list(100)
         
-        if not signals:
-            logging.info("No signals found in database")
-            return []
-        
-        logging.info(f"Found {len(signals)} signals in database")
-        
-        # Convert ObjectId to string for JSON serialization  
+        # Simple cleanup for JSON
+        result = []
         for signal in signals:
+            # Remove MongoDB _id
             if "_id" in signal:
                 del signal["_id"]
             
-            # Convert datetime objects to ISO strings with proper IST timezone
-            IST_TZ = pytz.timezone('Asia/Kolkata')
-            for field in ["signal_time", "created_at", "entry_time", "poi_time", "bos_time", "induc_time", "hit_time"]:
-                if field in signal and signal[field]:
-                    if hasattr(signal[field], 'isoformat'):
-                        # Ensure timezone is IST before converting
-                        dt_obj = signal[field]
-                        if dt_obj.tzinfo is None:
-                            dt_obj = dt_obj.replace(tzinfo=IST_TZ)
-                        else:
-                            dt_obj = dt_obj.astimezone(IST_TZ)
-                        signal[field] = dt_obj.isoformat()
-                    elif isinstance(signal[field], str) and 'T' in signal[field]:
-                        # Already ISO string, keep as is
-                        continue
+            # Simple datetime handling - convert to string if needed
+            for field in ["signal_time", "created_at", "hit_time"]:
+                if field in signal and hasattr(signal[field], 'isoformat'):
+                    signal[field] = signal[field].isoformat()
+            
+            result.append(signal)
         
-        return signals
+        logging.info(f"📊 Returning {len(result)} signals to frontend")
+        return result
         
     except Exception as e:
-        logging.error(f"Error getting signals: {e}")
+        logging.error(f"❌ Error getting signals: {e}")
+        # Return empty list on any error
         return []
 
 @api_router.get("/scanner/options")
