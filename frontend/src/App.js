@@ -569,8 +569,10 @@ function App() {
           </div>
         </div>
         
-        {/* Error Alert - only for connection errors */}
-        {scannerStatus.error_message && (
+        {/* Error Alert - only for critical connection errors, not routine status */}
+        {scannerStatus.error_message && 
+         !scannerStatus.error_message.includes("Unable to connect") &&
+         !scannerStatus.error_message.includes("LIVE MODE") && (
           <Alert variant="destructive" data-testid="error-alert">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>{scannerStatus.error_message}</AlertDescription>
