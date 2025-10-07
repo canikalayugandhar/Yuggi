@@ -501,11 +501,33 @@ function App() {
           </div>
         </div>
 
-        {/* Live Mode Status */}
-        {scannerStatus.error_message && scannerStatus.error_message.includes("LIVE MODE") && (
-          <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-sm">
-            <div className="flex items-center justify-center">
-              <h1 className="text-3xl font-black text-black tracking-wide">✅ LIVE MODE</h1>
+        {/* Live Mode Status with Date/Time */}
+        {scannerStatus.is_running && (
+          <div className="bg-white border border-gray-300 rounded-lg p-4 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div className="text-left">
+                <div className="text-lg font-semibold text-gray-800">
+                  {new Date().toLocaleDateString('en-IN', {
+                    timeZone: 'Asia/Kolkata',
+                    weekday: 'long',
+                    year: 'numeric', 
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </div>
+                <div className="text-md font-mono text-gray-600">
+                  {new Date().toLocaleTimeString('en-IN', {
+                    timeZone: 'Asia/Kolkata',
+                    hour12: false,
+                    hour: '2-digit',
+                    minute: '2-digit', 
+                    second: '2-digit'
+                  })} IST
+                </div>
+              </div>
+              <div className="text-right">
+                <h1 className="text-2xl font-black text-black tracking-wide">✅ LIVE MODE</h1>
+              </div>
             </div>
           </div>
         )}
