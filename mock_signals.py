@@ -18,17 +18,21 @@ def create_mock_signals():
     market_start = today.replace(hour=9, minute=15)  # 9:15 AM IST
     market_end = today.replace(hour=15, minute=30)   # 3:30 PM IST
     
-    # Valid 15-minute signal times
+    # Valid 15-minute signal times (only during market hours)
     valid_times = []
     current_time = market_start
     while current_time <= market_end:
         valid_times.append(current_time)
         current_time += dt.timedelta(minutes=15)
     
-    # Create signals based on user's example with correct market timing
+    # Ensure we have enough valid times
+    print(f"DEBUG: Generated {len(valid_times)} valid market time slots")
+    print(f"DEBUG: Market times from {valid_times[0]} to {valid_times[-1]}")
+    
+    # Create signals ONLY during market hours with correct indices
     mock_data = [
         {"underlying": "DIVISLAB", "strike": 6100, "type": "CE", "entry": 50.8, "outcome": "WIN", "time_index": 1, "lot": 100},    # 9:30
-        {"underlying": "AMBER", "strike": 8400, "type": "CE", "entry": 181.2, "outcome": "WIN", "time_index": 4, "lot": 100},     # 10:15
+        {"underlying": "AMBER", "strike": 8400, "type": "CE", "entry": 181.2, "outcome": "WIN", "time_index": 4, "lot": 100},     # 10:15  
         {"underlying": "BRITANNIA", "strike": 5900, "type": "CE", "entry": 176.85, "outcome": "WIN", "time_index": 4, "lot": 125}, # 10:15
         {"underlying": "ANGELONE", "strike": 2250, "type": "PE", "entry": 81.05, "outcome": "WIN", "time_index": 5, "lot": 250},   # 10:30
         {"underlying": "BRITANNIA", "strike": 5900, "type": "PE", "entry": 80.0, "outcome": "WIN", "time_index": 11, "lot": 125},  # 12:00
@@ -40,7 +44,7 @@ def create_mock_signals():
         {"underlying": "MAZDOCK", "strike": 2900, "type": "PE", "entry": 89.55, "outcome": "WIN", "time_index": 16, "lot": 175},    # 13:15
         {"underlying": "SIEMENS", "strike": 3250, "type": "CE", "entry": 77.0, "outcome": "WIN", "time_index": 17, "lot": 125},     # 13:30
         {"underlying": "SHREECEM", "strike": 29500, "type": "CE", "entry": 633.25, "outcome": "PENDING", "time_index": 20, "lot": 25}, # 14:15
-        {"underlying": "BANKNIFTY", "strike": 56200, "type": "CE", "entry": 718.15, "outcome": "WIN", "time_index": 21, "lot": 35},    # 14:30
+        {"underlying": "BANKNIFTY", "strike": 56200, "type": "CE", "entry": 718.15, "outcome": "WIN", "time_index": 21, "lot": 35},    # 14:30  
         {"underlying": "HAL", "strike": 4850, "type": "PE", "entry": 110.35, "outcome": "LOSS", "time_index": 1, "lot": 150},       # 9:30
         {"underlying": "BAJAJ-AUTO", "strike": 8900, "type": "CE", "entry": 174.55, "outcome": "WIN", "time_index": 6, "lot": 75},  # 10:45
         {"underlying": "DMART", "strike": 4300, "type": "PE", "entry": 126.8, "outcome": "LOSS", "time_index": 12, "lot": 150},     # 12:15
