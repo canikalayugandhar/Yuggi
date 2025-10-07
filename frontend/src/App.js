@@ -818,14 +818,23 @@ function App() {
                     />
                   </div>
                   
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="allow_intrabar"
-                      checked={config.allow_intrabar}
-                      onCheckedChange={(checked) => setConfig(prev => ({ ...prev, allow_intrabar: checked }))}
-                      data-testid="intrabar-switch"
-                    />
-                    <Label htmlFor="allow_intrabar">Allow Intrabar Analysis</Label>
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="allow_intrabar"
+                        checked={config.allow_intrabar}
+                        onCheckedChange={(checked) => setConfig(prev => ({ ...prev, allow_intrabar: checked }))}
+                        data-testid="intrabar-switch"
+                      />
+                      <Label htmlFor="allow_intrabar" className="font-medium">Allow Intrabar Analysis</Label>
+                    </div>
+                    <div className="text-xs text-gray-600 ml-6">
+                      {config.allow_intrabar ? (
+                        <span className="text-orange-600 font-medium">🔥 ON: Signals generated immediately when POI price is hit (real-time)</span>
+                      ) : (
+                        <span className="text-blue-600 font-medium">📊 OFF: Wait for 15-minute candle close before generating signals</span>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
