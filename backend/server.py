@@ -180,6 +180,12 @@ async def run_scanner_loop():
 
             today = _now_ist().date()
             
+            # Update global expiry filter from config
+            from trinity_scanner import _build_only_expiry_date_set
+            import trinity_scanner as ts
+            ts.ONLY_EXPIRY_DATES = config.get("only_expiry_dates", [])
+            ts.ONLY_EXPIRY_DATE_SET = _build_only_expiry_date_set(ts.ONLY_EXPIRY_DATES)
+            
             # Gather contracts
             rows = _gather_selected_contracts(kite, options, underlyings, today)
             max_candidates = config.get("max_candidates", 100)
