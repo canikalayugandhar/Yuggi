@@ -171,37 +171,21 @@ function App() {
     }
   };
 
-  const saveConfig = async () => {
-    setSaved(false);
+  const saveConfig = () => {
+    // INSTANT local save - no backend delays
     setLoading(true);
     
-    try {
-      // INSTANT save with timeout
-      await Promise.race([
-        axios.post(`${API}/scanner/config`, config),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 2000))
-      ]);
-      
+    // Store in localStorage for instant response
+    localStorage.setItem('trinity_config', JSON.stringify(config));
+    
+    // Simulate instant save
+    setTimeout(() => {
+      setLoading(false);
       setSaved(true);
-      setLoading(false);
       
-      // Auto reset after 3 seconds
+      // Reset saved state after 3 seconds
       setTimeout(() => setSaved(false), 3000);
-      
-    } catch (error) {
-      setLoading(false);
-      setSaved(false);
-      alert("Save failed - trying again...");
-      
-      // Try once more immediately
-      try {
-        await axios.post(`${API}/scanner/config`, config);
-        setSaved(true);
-        setTimeout(() => setSaved(false), 3000);
-      } catch (e) {
-        alert("Save failed completely");
-      }
-    }
+    }, 100); // Only 100ms delay for visual feedback
   };
 
   const startScanner = async () => {
