@@ -274,6 +274,17 @@ function App() {
   const startScanner = async () => {
     setLoading(true);
     try {
+      // Send current config to backend before starting
+      const currentConfig = localStorage.getItem('trinity_config');
+      if (currentConfig) {
+        try {
+          await axios.post(`${API}/scanner/config`, JSON.parse(currentConfig));
+          console.log('📤 Synced config to backend before starting scanner');
+        } catch (syncError) {
+          console.warn('Config sync failed, but continuing with scanner start:', syncError);
+        }
+      }
+      
       await axios.post(`${API}/scanner/start`);
       toast({
         title: "Success",
