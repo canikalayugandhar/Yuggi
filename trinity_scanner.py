@@ -562,7 +562,7 @@ def run_ymc_scan_on_candles(candles, min_candles_required: Optional[int] = None,
             signal_note = "CANDLE_CLOSE_POI"
         
         rr = (tp_price - entry_price) / (entry_price - sl_price) if (entry_price > sl_price and tp_price is not None) else 0.0
-        outcome = simulate_outcome(candles, entry_idx, entry_price, tp_price, sl_price)
+        outcome = simulate_outcome(candles, entry_idx, entry_price, tp_price, sl_price, signal_time=entry_time)
         
         signals.append({
             "bos_index": bos_idx,
