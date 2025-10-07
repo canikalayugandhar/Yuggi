@@ -580,18 +580,29 @@ class TrinityBackendTester:
         signals = self.test_signals_endpoint()
         self.test_options_endpoint()
         
+        # 🎯 CRITICAL: Entry Price Accuracy Tests (Primary Focus)
+        logger.info("🎯 Testing Entry Price Accuracy - CRITICAL FOCUS AREA")
+        if signals:
+            self.validate_entry_price_accuracy(signals)
+        
         # Timing validation tests
         self.test_market_hours_enforcement()
         self.test_timezone_handling()
         
-        # Mode-specific tests
-        self.test_intrabar_mode()
-        time.sleep(5)
-        self.test_candle_close_mode()
+        # Mode-specific tests with entry price validation
+        logger.info("🔄 Testing Intrabar vs Candle Close Pricing Logic")
+        self.test_intrabar_vs_candle_close_pricing()
+        
+        # Scanner restart test for fresh signals
+        logger.info("🔄 Testing Scanner Restart with Fresh Signal Generation")
+        self.test_scanner_restart_fresh_signals()
         
         # Final validation
-        logger.info("🔍 Final signal timing validation...")
+        logger.info("🔍 Final comprehensive validation...")
         final_signals = self.test_signals_endpoint()
+        if final_signals:
+            self.validate_entry_price_accuracy(final_signals)
+            self.validate_signal_timing(final_signals)
         
         # Summary
         self.print_test_summary()
