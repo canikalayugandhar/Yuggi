@@ -187,62 +187,47 @@ async def run_scanner_loop():
                         mock_signals = create_mock_signals()
                         scanner_state["last_signals"] = mock_signals
                         
-                        # Mock ATM options data with realistic strikes
+                        # Mock ATM options data - SHOW ALL UNDERLYINGS
                         import random
                         mock_options = []
                         
-                        # NIFTY ATM options around current levels
-                        nifty_spot = 25000
-                        nifty_strikes = [24950, 25000, 25050, 25100, 25150]
+                        # ALL MAJOR INDICES AND STOCKS ATM options
+                        all_underlyings = [
+                            {"name": "NIFTY", "spot": 25000, "strikes": [24900, 24950, 25000, 25050, 25100], "lot": 50},
+                            {"name": "BANKNIFTY", "spot": 52000, "strikes": [51800, 51900, 52000, 52100, 52200], "lot": 25}, 
+                            {"name": "FINNIFTY", "spot": 23000, "strikes": [22800, 22900, 23000, 23100, 23200], "lot": 40},
+                            {"name": "MIDCPNIFTY", "spot": 12500, "strikes": [12400, 12450, 12500, 12550, 12600], "lot": 75},
+                            {"name": "RELIANCE", "spot": 2800, "strikes": [2750, 2800, 2850, 2900, 2950], "lot": 250},
+                            {"name": "TCS", "spot": 3600, "strikes": [3550, 3600, 3650, 3700, 3750], "lot": 125},
+                            {"name": "HDFC", "spot": 1650, "strikes": [1600, 1650, 1700, 1750, 1800], "lot": 400},
+                            {"name": "ICICIBANK", "spot": 1200, "strikes": [1150, 1200, 1250, 1300, 1350], "lot": 375}
+                        ]
                         
-                        for i, strike in enumerate(nifty_strikes):
-                            for j, option_type in enumerate(["CE", "PE"]):
-                                ltp = random.uniform(30, 150) if option_type == "CE" else random.uniform(25, 120)
-                                volume = random.randint(5000, 50000)
-                                oi = random.randint(100000, 500000)
-                                lot_size = 50
-                                
-                                mock_options.append({
-                                    "underlying": "NIFTY",
-                                    "symbol": f"NIFTY25OCT{strike}{option_type}",
-                                    "strike": strike,
-                                    "type": option_type,
-                                    "expiry": "2025-10-25",
-                                    "ltp": round(ltp, 2),
-                                    "volume": volume,
-                                    "oi": oi,
-                                    "lot": lot_size,
-                                    "investment": round(ltp * lot_size, 2)
-                                })
-                        
-                        # BANKNIFTY ATM options
-                        banknifty_spot = 52000
-                        banknifty_strikes = [51800, 51900, 52000, 52100, 52200]
-                        
-                        for strike in banknifty_strikes[:3]:  # Limit to 3 strikes for BANKNIFTY
-                            for option_type in ["CE", "PE"]:
-                                ltp = random.uniform(50, 200) if option_type == "CE" else random.uniform(40, 180)
-                                volume = random.randint(3000, 30000)
-                                oi = random.randint(50000, 300000)
-                                lot_size = 25
-                                
-                                mock_options.append({
-                                    "underlying": "BANKNIFTY",
-                                    "symbol": f"BANKNIFTY25OCT{strike}{option_type}",
-                                    "strike": strike,
-                                    "type": option_type,
-                                    "expiry": "2025-10-25",
-                                    "ltp": round(ltp, 2),
-                                    "volume": volume,
-                                    "oi": oi,
-                                    "lot": lot_size,
-                                    "investment": round(ltp * lot_size, 2)
-                                })
+                        for underlying in all_underlyings:
+                            for strike in underlying["strikes"][:3]:  # Top 3 strikes per underlying
+                                for option_type in ["CE", "PE"]:
+                                    ltp = random.uniform(20, 300)
+                                    volume = random.randint(2000, 80000)
+                                    oi = random.randint(50000, 800000)
+                                    lot_size = underlying["lot"]
+                                    
+                                    mock_options.append({
+                                        "underlying": underlying["name"],
+                                        "symbol": f"{underlying['name']}25OCT{strike}{option_type}",
+                                        "strike": strike,
+                                        "type": option_type,
+                                        "expiry": "2025-10-25",
+                                        "ltp": round(ltp, 2),
+                                        "volume": volume,
+                                        "oi": oi,
+                                        "lot": lot_size,
+                                        "investment": round(ltp * lot_size, 2)
+                                    })
                         
                         # Sort by volume (high to low) for better display
                         mock_options.sort(key=lambda x: x["volume"], reverse=True)
-                        # ATM OPTIONS: Show ALL contracts regardless of underlyings filter
-                        scanner_state["last_options"] = mock_options[:15]  # Show top 15 options
+                        # ATM OPTIONS: Show ALL contracts (mixed underlyings) in dashboard
+                        scanner_state["last_options"] = mock_options[:20]  # Show top 20 options
                         
                         # Filter signals based on underlyings setting
                         underlyings_filter = config.get("underlyings", [])
