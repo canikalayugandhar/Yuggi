@@ -902,38 +902,54 @@ class TrinityBackendTester:
         self.print_test_summary()
     
     def print_test_summary(self):
-        """Print comprehensive test summary"""
+        """Print comprehensive test summary focused on WIN/LOSS calculation fix"""
         total_tests = len(self.test_results)
         passed_tests = len([r for r in self.test_results if r['passed']])
         failed_tests = total_tests - passed_tests
         
-        logger.info("\n" + "="*60)
-        logger.info("🎯 TRINITY WEALTH SCANNER TEST SUMMARY")
-        logger.info("="*60)
+        logger.info("\n" + "="*70)
+        logger.info("🎯 TRINITY WEALTH SCANNER - WIN/LOSS CALCULATION FIX TEST SUMMARY")
+        logger.info("="*70)
         logger.info(f"Total Tests: {total_tests}")
         logger.info(f"✅ Passed: {passed_tests}")
         logger.info(f"❌ Failed: {failed_tests}")
         logger.info(f"Success Rate: {(passed_tests/total_tests)*100:.1f}%")
         
+        # 🎯 CRITICAL WIN/LOSS CALCULATION FIX RESULTS
+        logger.info("\n🎯 CRITICAL WIN/LOSS CALCULATION FIX RESULTS:")
+        logger.info("-" * 50)
+        
+        outcome_tests = [r for r in self.test_results if any(keyword in r['test'].lower() 
+                        for keyword in ['outcome', 'reset', 'timing validation', 'retroactive', 'historical vs live'])]
+        outcome_passed = len([r for r in outcome_tests if r['passed']])
+        
+        for result in outcome_tests:
+            status = "✅ PASS" if result['passed'] else "❌ FAIL"
+            logger.info(f"  {status} - {result['test']}")
+            if not result['passed'] and result['details']:
+                logger.info(f"    Issue: {result['message']}")
+        
+        logger.info(f"\n🎯 WIN/LOSS Fix Tests Passed: {outcome_passed}/{len(outcome_tests)}")
+        
         if failed_tests > 0:
-            logger.info("\n❌ FAILED TESTS:")
+            logger.info("\n❌ ALL FAILED TESTS:")
             for result in self.test_results:
                 if not result['passed']:
                     logger.info(f"  • {result['test']}: {result['message']}")
-                    if result['details']:
+                    if result['details'] and len(str(result['details'])) < 200:
                         logger.info(f"    Details: {result['details']}")
         
-        logger.info("\n🎯 CRITICAL ENTRY PRICE VALIDATION:")
-        entry_price_tests = [r for r in self.test_results if 'entry price' in r['test'].lower() or 'pricing' in r['test'].lower()]
-        entry_price_passed = len([r for r in entry_price_tests if r['passed']])
-        logger.info(f"Entry Price Tests Passed: {entry_price_passed}/{len(entry_price_tests)}")
-        
-        logger.info("\n✅ CRITICAL TIMING VALIDATION:")
+        logger.info("\n✅ ADDITIONAL VALIDATION RESULTS:")
         timing_tests = [r for r in self.test_results if 'timing' in r['test'].lower() or 'market hours' in r['test'].lower()]
         timing_passed = len([r for r in timing_tests if r['passed']])
-        logger.info(f"Timing Tests Passed: {timing_passed}/{len(timing_tests)}")
+        logger.info(f"Signal Timing Tests Passed: {timing_passed}/{len(timing_tests)}")
         
-        logger.info("="*60)
+        connectivity_tests = [r for r in self.test_results if any(keyword in r['test'].lower() 
+                             for keyword in ['connectivity', 'config', 'status', 'endpoint'])]
+        connectivity_passed = len([r for r in connectivity_tests if r['passed']])
+        logger.info(f"API Connectivity Tests Passed: {connectivity_passed}/{len(connectivity_tests)}")
+        
+        logger.info("="*70)
 
 def main():
     """Main test execution"""
