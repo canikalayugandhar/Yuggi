@@ -433,24 +433,8 @@ async def get_status_checks():
 async def update_scanner_config(config: ScannerConfig):
     """Update scanner configuration"""
     try:
-        # Validate Kite credentials if provided (skip validation for demo credentials)
-        if config.api_key and config.api_secret:
-            # Check if these are demo credentials
-            if config.api_key.startswith("demo") or len(config.api_key) < 10:
-                # Demo mode - don't validate credentials
-                config.access_token = "demo_access_token"
-                scanner_state["kite_session"] = None  # Will use mock data
-            else:
-                try:
-                    kite, access_token = ensure_kite_session(
-                        config.api_key, 
-                        config.api_secret, 
-                        config.access_token
-                    )
-                    config.access_token = access_token
-                    scanner_state["kite_session"] = kite
-                except Exception as e:
-                    raise HTTPException(status_code=400, detail=f"Invalid Kite credentials: {str(e)}")
+        # Skip validation for faster config saves (validate only when starting scanner)
+        logging.info(f"⚡ Config update: {config.api_key[:4]}... (skipping validation for speed)")
         
         scanner_state["config"] = config.dict()
         scanner_state["error_message"] = None
