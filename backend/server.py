@@ -388,10 +388,20 @@ async def run_scanner_loop():
                     }
                 })
 
-            # Save to database
+            # Save to database (check for duplicates)
             for signal in scanner_state["last_signals"]:
                 try:
-                    await db.signals.insert_one(signal)
+                    # Check if signal already exists
+                    existing = await db.signals.find_one({
+                        "underlying": signal.get("underlying"),
+                        "contract": signal.get("contract"), 
+                        "entry_price": signal.get("entry_price"),
+                        "signal_time": signal.get("signal_time")
+                    })
+                    if not existing:
+                        await db.signals.insert_one(signal)
+                    else:
+                        logging.info(f"Signal already exists: {signal.get('underlying')} {signal.get('contract')}")
                 except Exception as e:
                     logging.error(f"Database insert error: {e}")
 
