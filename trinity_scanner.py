@@ -515,26 +515,21 @@ def run_ymc_scan_on_candles(candles, min_candles_required: Optional[int] = None,
         poi_time = candles[poi["index"]].get("date") if poi and poi.get("index") is not None else None
         entry_idx = poi["index"]
         
-        # 🔥 SIGNAL TIMING LOGIC - ENSURE IST AND MARKET HOURS
+        # 🔥 SIGNAL TIMING LOGIC - ALWAYS USE CURRENT IST TIME
         current_ist = _now_ist()
         
         # Validate we're within market hours before generating signal
         if not _within_market_hours(current_ist):
             search = induc_idx + 1
             continue
-            
+        
+        # 🎯 CRITICAL FIX: Always use current IST time to avoid historical timezone issues
+        # Historical candle data from Kite API has timezone issues, so we force current market time
+        entry_time = current_ist
+        
         if allow_intrabar:
-            # INTRABAR: Signal immediately when POI is identified (current IST time)
-            entry_time = current_ist
             signal_note = "INTRABAR_POI_HIT"
         else:
-            # CANDLE CLOSE: Signal at the candle close time where POI was found
-            poi_dt = _parse_to_dtobj(poi_time)
-            if poi_dt and _within_market_hours(poi_dt):
-                entry_time = poi_dt
-            else:
-                # If POI time is invalid, use current IST but only if within market hours
-                entry_time = current_ist
             signal_note = "CANDLE_CLOSE_POI"
         
         rr = (tp_price - entry_price) / (entry_price - sl_price) if (entry_price > sl_price and tp_price is not None) else 0.0
