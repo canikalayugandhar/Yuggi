@@ -895,9 +895,40 @@ function App() {
             
             {/* Save Button */}
             <div className="flex justify-end">
-              <Button onClick={saveConfig} data-testid="save-config-btn">
-                <Settings className="w-4 h-4 mr-2" />
-                Save Configuration
+              <Button 
+                onClick={saveConfig} 
+                data-testid="save-config-btn"
+                disabled={saveStatus === 'saving'}
+                className={`
+                  ${saveStatus === 'saving' ? 'bg-yellow-500 hover:bg-yellow-600' : ''}
+                  ${saveStatus === 'saved' ? 'bg-green-600 hover:bg-green-700' : ''}
+                  ${saveStatus === 'error' ? 'bg-red-600 hover:bg-red-700' : ''}
+                `}
+              >
+                {saveStatus === 'saving' && (
+                  <>
+                    <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Saving...
+                  </>
+                )}
+                {saveStatus === 'saved' && (
+                  <>
+                    <CheckCircle2 className="w-4 h-4 mr-2" />
+                    ✅ Saved Successfully!
+                  </>
+                )}
+                {saveStatus === 'error' && (
+                  <>
+                    <AlertCircle className="w-4 h-4 mr-2" />
+                    Save Failed
+                  </>
+                )}
+                {saveStatus === 'idle' && (
+                  <>
+                    <Settings className="w-4 h-4 mr-2" />
+                    Save Configuration
+                  </>
+                )}
               </Button>
             </div>
           </TabsContent>
