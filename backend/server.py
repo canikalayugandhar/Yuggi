@@ -444,29 +444,10 @@ async def get_status_checks():
 
 @api_router.post("/scanner/config")
 async def update_scanner_config(config: ScannerConfig):
-    """Update scanner configuration"""
-    try:
-        # Skip validation for faster config saves (validate only when starting scanner)
-        logging.info(f"⚡ Config update: {config.api_key[:4]}... (skipping validation for speed)")
-        
-        scanner_state["config"] = config.dict()
-        scanner_state["error_message"] = None
-        
-        # Save config to database
-        config_doc = {
-            "id": "scanner_config",
-            "config": config.dict(),
-            "updated_at": datetime.utcnow()
-        }
-        await db.scanner_configs.replace_one(
-            {"id": "scanner_config"}, 
-            config_doc, 
-            upsert=True
-        )
-        
-        return {"message": "Configuration updated successfully"}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    """Update scanner configuration - SIMPLE & FAST"""
+    # Just store in memory - no validation, no database
+    scanner_state["config"] = config.dict()
+    return {"message": "Configuration updated successfully"}
 
 @api_router.get("/scanner/config")
 async def get_scanner_config():
