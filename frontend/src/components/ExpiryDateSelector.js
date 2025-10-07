@@ -11,12 +11,6 @@ const ExpiryDateSelector = ({ value = [], onChange, ...props }) => {
 
   // Removed suggested dates generation as requested
 
-  const isLastThursday = (date) => {
-    const nextWeek = new Date(date);
-    nextWeek.setDate(date.getDate() + 7);
-    return nextWeek.getMonth() !== date.getMonth();
-  };
-
   const handleAddDate = () => {
     if (newDate && !value.includes(newDate)) {
       const updatedDates = [...value, newDate].sort();
@@ -28,13 +22,6 @@ const ExpiryDateSelector = ({ value = [], onChange, ...props }) => {
   const handleRemoveDate = (dateToRemove) => {
     const updatedDates = value.filter(date => date !== dateToRemove);
     onChange(updatedDates);
-  };
-
-  const handleSuggestedDateClick = (suggestedDate) => {
-    if (!value.includes(suggestedDate.date)) {
-      const updatedDates = [...value, suggestedDate.date].sort();
-      onChange(updatedDates);
-    }
   };
 
   const handleKeyPress = (e) => {
