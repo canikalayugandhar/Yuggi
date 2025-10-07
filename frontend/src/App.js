@@ -233,8 +233,25 @@ function App() {
   const formatDateTime = (dateStr) => {
     if (!dateStr) return "N/A";
     try {
-      // Fix timezone issue - force IST display
-      const date = new Date(dateStr);
+      // Robust IST datetime formatting
+      let date;
+      
+      // Handle different date formats
+      if (typeof dateStr === 'string') {
+        // Handle ISO strings with or without timezone
+        if (dateStr.includes('T')) {
+          date = new Date(dateStr);
+        } else {
+          // Assume IST if no timezone info
+          date = new Date(dateStr + '+05:30');
+        }
+      } else if (dateStr instanceof Date) {
+        date = dateStr;
+      } else {
+        return "N/A";
+      }
+      
+      // Force IST display with proper formatting
       return date.toLocaleString('en-IN', { 
         timeZone: 'Asia/Kolkata',
         year: 'numeric',
@@ -242,9 +259,11 @@ function App() {
         day: '2-digit',
         hour: '2-digit',
         minute: '2-digit',
-        second: '2-digit'
+        second: '2-digit',
+        hour12: false  // 24-hour format
       });
-    } catch {
+    } catch (error) {
+      console.error('Date formatting error:', error, dateStr);
       return "N/A";
     }
   };
