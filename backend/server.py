@@ -683,6 +683,35 @@ async def reset_signal_outcomes():
         logging.error(f"Reset outcomes error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.post("/scanner/test-signal")
+async def create_test_signal(signal_data: dict):
+    """Create a test signal for outcome monitoring testing"""
+    try:
+        # Insert test signal into database
+        await db.signals.insert_one(signal_data)
+        
+        # Add to in-memory signals
+        if "last_signals" not in scanner_state:
+            scanner_state["last_signals"] = []
+        
+        scanner_state["last_signals"].append(signal_data)
+        
+        # Broadcast new signal
+        await broadcast_message({
+            "type": "live_signal",
+            "data": {
+                "signal": signal_data,
+                "timestamp": _now_ist().isoformat(),
+                "mode": "TEST"
+            }
+        })
+        
+        return {"message": "Test signal created", "signal": signal_data}
+    
+    except Exception as e:
+        logging.error(f"Test signal creation error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.post("/scanner/test-outcome/{signal_id}/{outcome}")
 async def test_outcome_update(signal_id: str, outcome: str):
     """Test outcome update for a specific signal (for debugging)"""
@@ -709,6 +738,12 @@ async def test_outcome_update(signal_id: str, outcome: str):
             }
         )
         
+        # Update in-memory signals
+        for mem_signal in scanner_state.get("last_signals", []):
+            if mem_signal.get("id") == signal_id:
+                mem_signal["outcome"] = outcome
+                mem_signal["exit_price"] = exit_price
+        
         # Update stats and broadcast
         updated_stats = await calculate_real_stats()
         
@@ -721,6 +756,14 @@ async def test_outcome_update(signal_id: str, outcome: str):
                 "exit_price": exit_price,
                 "timestamp": _now_ist().isoformat(),
                 "updated_stats": updated_stats
+            }
+        })
+        
+        await broadcast_message({
+            "type": "stats_update", 
+            "data": {
+                "stats": updated_stats,
+                "timestamp": _now_ist().isoformat()
             }
         })
         
