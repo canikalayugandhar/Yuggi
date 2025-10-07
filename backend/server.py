@@ -340,6 +340,20 @@ async def run_scanner_loop():
                 # Process new signals
                 new_signals = []
                 for sig in signals:
+                    # Ensure signal_time is properly formatted in IST
+                    signal_time_raw = sig.get("_entry_dt") or sig.get("entry_time")
+                    if signal_time_raw:
+                        if hasattr(signal_time_raw, 'astimezone'):
+                            signal_time = signal_time_raw.astimezone(pytz.timezone('Asia/Kolkata'))
+                        else:
+                            signal_time = _now_ist()
+                    else:
+                        signal_time = _now_ist()
+                    
+                    # Validate signal is within market hours before adding
+                    if not _within_market_hours(signal_time):
+                        continue
+                    
                     signal_data = {
                         "id": str(uuid.uuid4()),
                         "underlying": sig.get("underlying", ""),
@@ -350,7 +364,7 @@ async def run_scanner_loop():
                         "rr": sig.get("rr"),
                         "lot": sig.get("lot", 1),
                         "outcome": sig.get("outcome", "PENDING"),
-                        "signal_time": sig.get("_entry_dt") or _now_ist(),
+                        "signal_time": signal_time,
                         "created_at": _now_ist()
                     }
                     new_signals.append(signal_data)
