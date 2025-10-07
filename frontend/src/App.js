@@ -842,9 +842,9 @@ function App() {
             
             {/* Save Button */}
             <div className="flex justify-end">
-              <Button onClick={saveConfig} disabled={loading} data-testid="save-config-btn">
+              <Button onClick={saveConfig} data-testid="save-config-btn">
                 <Settings className="w-4 h-4 mr-2" />
-                {loading ? 'Saving...' : 'Save Configuration'}
+                Save Configuration
               </Button>
             </div>
           </TabsContent>
