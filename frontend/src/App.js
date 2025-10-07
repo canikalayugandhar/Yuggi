@@ -171,22 +171,22 @@ function App() {
   };
 
   const saveConfig = async () => {
-    setLoading(true);
     try {
+      // Super simple save - no loading state
       await axios.post(`${API}/scanner/config`, config);
       toast({
-        title: "Success",
-        description: "Configuration saved successfully!",
-        variant: "default"
+        title: "✅ Saved!",
+        description: "Configuration updated",
+        variant: "default",
+        duration: 2000
       });
     } catch (error) {
       toast({
-        title: "Error",
-        description: error.response?.data?.detail || "Failed to save configuration",
-        variant: "destructive"
+        title: "❌ Error",
+        description: "Save failed",
+        variant: "destructive",
+        duration: 3000
       });
-    } finally {
-      setLoading(false);
     }
   };
 
