@@ -588,17 +588,29 @@ def _parse_to_dtobj(ts):
             dtobj = ts.to_pydatetime()
         else:
             dtobj = pd.to_datetime(str(ts))
+        
+        # Ensure we have a timezone-aware datetime in IST
         if hasattr(dtobj, "tz_localize"):
             if dtobj.tzinfo is None:
                 dtobj = dtobj.tz_localize(IST)
+            else:
+                dtobj = dtobj.tz_convert(IST)
+        
         if isinstance(dtobj, pd.Timestamp):
             dtobj = dtobj.to_pydatetime()
-        if isinstance(dtobj, dt.datetime) and dtobj.tzinfo is None:
-            dtobj = dtobj.replace(tzinfo=IST)
+        
+        # Force conversion to IST if no timezone
+        if isinstance(dtobj, dt.datetime):
+            if dtobj.tzinfo is None:
+                dtobj = dtobj.replace(tzinfo=IST)
+            else:
+                dtobj = dtobj.astimezone(IST)
+        
         return dtobj
     except Exception:
         try:
-            return dt.datetime.fromisoformat(str(ts))
+            naive_dt = dt.datetime.fromisoformat(str(ts).replace('Z', ''))
+            return naive_dt.replace(tzinfo=IST)
         except Exception:
             return None
 
