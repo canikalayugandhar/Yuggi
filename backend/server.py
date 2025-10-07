@@ -487,14 +487,51 @@ async def stop_scanner():
     scanner_state["kite_session"] = None
     return {"message": "Scanner stopped successfully"}
 
+async def calculate_real_stats():
+    """Calculate statistics from actual database signals"""
+    try:
+        # Get all signals from database
+        all_db_signals = await db.signals.find().to_list(None)
+        
+        total_signals = len(all_db_signals)
+        winning_signals = len([s for s in all_db_signals if s.get("outcome") == "WIN"])
+        losing_signals = len([s for s in all_db_signals if s.get("outcome") == "LOSS"])
+        
+        # Calculate P&L based on actual signal data
+        total_pnl = 0.0
+        for signal in all_db_signals:
+            outcome = signal.get("outcome", "")
+            lot = signal.get("lot", 1)
+            entry_price = signal.get("entry_price", 0)
+            tp = signal.get("tp", 0)
+            sl = signal.get("sl", 0)
+            
+            if outcome == "WIN" and tp and entry_price:
+                pnl = (tp - entry_price) * lot
+                total_pnl += pnl
+            elif outcome == "LOSS" and sl and entry_price:
+                pnl = (sl - entry_price) * lot  # This will be negative
+                total_pnl += pnl
+        
+        return {
+            "total": total_signals,
+            "hit": winning_signals,
+            "flop": losing_signals,
+            "pnl": round(total_pnl, 2)
+        }
+    except Exception as e:
+        logging.error(f"Error calculating stats: {e}")
+        return {"total": 0, "hit": 0, "flop": 0, "pnl": 0.0}
+
 @api_router.get("/scanner/status", response_model=ScannerStatus)
 async def get_scanner_status():
-    """Get current scanner status"""
+    """Get current scanner status with real-time stats from database"""
+    real_stats = await calculate_real_stats()
     return ScannerStatus(
         is_running=scanner_state["is_running"],
         error_message=scanner_state.get("error_message"),
         last_update=datetime.utcnow(),
-        stats=scanner_state.get("stats", {"total": 0, "hit": 0, "flop": 0, "pnl": 0.0})
+        stats=real_stats
     )
 
 @api_router.get("/scanner/signals", response_model=List[Dict])
