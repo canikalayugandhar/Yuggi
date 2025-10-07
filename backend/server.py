@@ -418,9 +418,19 @@ async def run_scanner_loop():
                     }
                 })
 
-            # Save to database (check for duplicates)
+            # Save to database (check for duplicates and validate timing)
             for signal in scanner_state["last_signals"]:
                 try:
+                    # 🛡️ FINAL VALIDATION: Reject signals with invalid timestamps
+                    signal_dt = signal.get("signal_time")
+                    if isinstance(signal_dt, str):
+                        signal_dt = dt.datetime.fromisoformat(signal_dt.replace('Z', '+00:00'))
+                    
+                    # Skip signals outside market hours (9:15 AM - 3:30 PM IST)
+                    if not _within_market_hours(signal_dt):
+                        logging.warning(f"🚫 REJECTED signal with invalid time: {signal_dt} - outside market hours")
+                        continue
+                    
                     # Check if signal already exists
                     existing = await db.signals.find_one({
                         "underlying": signal.get("underlying"),
@@ -430,6 +440,7 @@ async def run_scanner_loop():
                     })
                     if not existing:
                         await db.signals.insert_one(signal)
+                        logging.info(f"✅ SAVED signal: {signal.get('underlying')} {signal.get('contract')} at {signal_dt}")
                     else:
                         logging.info(f"Signal already exists: {signal.get('underlying')} {signal.get('contract')}")
                 except Exception as e:
