@@ -502,12 +502,14 @@ def run_ymc_scan_on_candles(candles, min_candles_required: Optional[int] = None,
         except Exception:
             pass
 
-        # ===== Signal Generation: POI-based Entry =====
-        SL_PCT = sl_pct / 100.0
-        TP_PCT = tp_pct / 100.0
+        # ===== Signal Generation: POI-based Entry (Original Trinity Logic) =====
+        SL_PCT = sl_pct / 100.0  # Convert percentage to decimal
+        TP_PCT = tp_pct / 100.0  # Convert percentage to decimal
 
         entry_price = round(poi["price"], 2)  # 🎯 SIGNAL AT POI PRICE
         sl_price = round(entry_price * (1 - SL_PCT), 2)
+        
+        # 🎯 CORRECT TP LOGIC: TP based on Buy-Side Liquidity (BSL) as per original code
         tp_price = round(buy_liq * (1 - TP_PCT), 2) if buy_liq is not None else None
 
         poi_time = candles[poi["index"]].get("date") if poi and poi.get("index") is not None else None
