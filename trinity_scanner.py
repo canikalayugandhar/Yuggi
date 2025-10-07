@@ -463,7 +463,7 @@ def simulate_outcome(candles, entry_idx, entry_price, tp_price, sl_price, lookah
     return {"result": "NO_HIT", "hit_index": None, "hit_time": None, "hit_price": None}
 
 
-def run_ymc_scan_on_candles(candles, min_candles_required: Optional[int] = None, sl_pct: float = 0.1, tp_pct: float = 0.1, allow_intrabar: bool = False):
+def run_ymc_scan_on_candles(candles, min_candles_required: Optional[int] = None, sl_pct: float = 0.1, tp_pct: float = 0.1, allow_intrabar: bool = False, live_ltp: Optional[float] = None):
     signals = []
     search = 0
     threshold = MIN_CANDLES if min_candles_required is None else int(min_candles_required)
