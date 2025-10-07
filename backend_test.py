@@ -629,6 +629,11 @@ class TrinityBackendTester:
                     if result['details']:
                         logger.info(f"    Details: {result['details']}")
         
+        logger.info("\n🎯 CRITICAL ENTRY PRICE VALIDATION:")
+        entry_price_tests = [r for r in self.test_results if 'entry price' in r['test'].lower() or 'pricing' in r['test'].lower()]
+        entry_price_passed = len([r for r in entry_price_tests if r['passed']])
+        logger.info(f"Entry Price Tests Passed: {entry_price_passed}/{len(entry_price_tests)}")
+        
         logger.info("\n✅ CRITICAL TIMING VALIDATION:")
         timing_tests = [r for r in self.test_results if 'timing' in r['test'].lower() or 'market hours' in r['test'].lower()]
         timing_passed = len([r for r in timing_tests if r['passed']])
