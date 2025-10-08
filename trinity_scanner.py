@@ -536,9 +536,14 @@ def run_ymc_scan_on_candles(candles, min_candles_required: Optional[int] = None,
             # Use close price of the POI candle (but validate it's realistic)
             entry_price = round(candles[poi["index"]]["close"], 2)  # Actual available price
         
-        # 🎯 SIMPLE SL/TP CALCULATION USING SETTINGS
-        sl_price = round(entry_price * (1 - SL_PCT), 2)  # SL below entry
-        tp_price = round(entry_price * (1 + TP_PCT), 2)  # TP above entry
+        # 🎯 CORRECT SMC SL/TP CALCULATION - As per user's specification
+        # SL = POI LOW - SL%
+        # TP = Bullish Liquidity - TP% 
+        poi_low = poi["low"]  # POI LOW level
+        bullish_liquidity = buy_liq  # Bullish Liquidity level
+        
+        sl_price = round(poi_low * (1 - SL_PCT), 2)  # POI LOW - SL%
+        tp_price = round(bullish_liquidity * (1 - TP_PCT), 2)  # Bullish Liquidity - TP%
 
         poi_time = candles[poi["index"]].get("date") if poi and poi.get("index") is not None else None
         entry_idx = poi["index"]
