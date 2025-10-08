@@ -870,6 +870,11 @@ async def get_current_options():
             logging.info(f"Using {len(scanner_state['last_options'])} in-memory options")
             return scanner_state["last_options"]
         
+        # Also check atm_options for compatibility
+        if scanner_state.get("atm_options"):
+            logging.info(f"Using {len(scanner_state['atm_options'])} ATM options")
+            return scanner_state["atm_options"]
+        
         # No options available
         logging.warning("No options found in database or memory")
         return []
