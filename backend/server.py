@@ -829,9 +829,8 @@ async def get_scanner_status():
 async def get_signals():
     """Get recent signals - FORCE FRESH DATA"""
     try:
-        # FORCE fresh database connection
-        client_fresh = motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017")
-        db_fresh = client_fresh.trinity_scanner
+        # Use existing database connection
+        signals = list(await db.signals.find({}).to_list(50))
         
         # Get fresh signals from database
         signals = list(await db_fresh.signals.find({}).to_list(50))
