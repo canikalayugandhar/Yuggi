@@ -301,21 +301,31 @@ function App() {
       // Update signals
       setSignals(signalsList);
       
-      // 🎯 SIMPLE STATS UPDATE: Calculate stats directly from loaded signals
+      // 🎯 FORCE STATS UPDATE: Always calculate from actual loaded signals
       const calculatedStats = calculateStatsFromSignals(signalsList);
       setScannerStatus(prev => ({
         ...prev,
         stats: calculatedStats
       }));
       
-      console.log('📊 Stats calculated from signals:', calculatedStats);
+      console.log('📊 Stats FORCED update from signals:', calculatedStats);
+      
+      // If no signals, force stats to zero
+      if (signalsList.length === 0) {
+        setScannerStatus(prev => ({
+          ...prev,
+          stats: { total: 0, hit: 0, flop: 0, pnl: 0.0 }
+        }));
+        console.log('📊 Forced stats to ZERO - no signals');
+      }
       
     } catch (error) {
       console.error("Failed to load signals:", error);
-      // Keep existing signals on error
-      if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
-        console.warn('Signals request timed out - keeping existing data');
-      }
+      // On error, force stats to zero
+      setScannerStatus(prev => ({
+        ...prev,
+        stats: { total: 0, hit: 0, flop: 0, pnl: 0.0 }
+      }));
     }
   };
 
