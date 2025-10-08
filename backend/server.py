@@ -827,17 +827,25 @@ async def get_scanner_status():
 
 @api_router.get("/scanner/signals")
 async def get_signals():
-    """Get recent signals - FASTEST POSSIBLE"""
+    """Get recent signals - FORCE FRESH DATA"""
     try:
-        # Get signals from database - minimal processing
-        signals = list(await db.signals.find({}).to_list(50))
+        # FORCE fresh database connection
+        client_fresh = motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017")
+        db_fresh = client_fresh.trinity_scanner
         
-        # Ultra-simple cleanup
+        # Get fresh signals from database
+        signals = list(await db_fresh.signals.find({}).to_list(50))
+        
+        # Cleanup
         for signal in signals:
             if "_id" in signal:
                 del signal["_id"]
         
-        print(f"📊 API returning {len(signals)} signals")
+        print(f"📊 FRESH API returning {len(signals)} signals")
+        if signals:
+            print(f"    First signal: {signals[0].get('underlying')} SL:{signals[0].get('sl')} TP:{signals[0].get('tp')}")
+        
+        client_fresh.close()
         return signals
         
     except Exception as e:
