@@ -536,10 +536,9 @@ def run_ymc_scan_on_candles(candles, min_candles_required: Optional[int] = None,
             # Use close price of the POI candle (but validate it's realistic)
             entry_price = round(candles[poi["index"]]["close"], 2)  # Actual available price
         
-        sl_price = round(entry_price * (1 - SL_PCT), 2)
-        
-        # 🎯 CORRECT TP LOGIC: TP based on Buy-Side Liquidity (BSL) as per original code
-        tp_price = round(buy_liq * (1 - TP_PCT), 2) if buy_liq is not None else None
+        # 🎯 SIMPLE SL/TP CALCULATION USING SETTINGS
+        sl_price = round(entry_price * (1 - SL_PCT), 2)  # SL below entry
+        tp_price = round(entry_price * (1 + TP_PCT), 2)  # TP above entry
 
         poi_time = candles[poi["index"]].get("date") if poi and poi.get("index") is not None else None
         entry_idx = poi["index"]
