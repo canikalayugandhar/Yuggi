@@ -832,19 +832,16 @@ async def get_signals():
         # Use existing database connection
         signals = list(await db.signals.find({}).to_list(50))
         
-        # Get fresh signals from database
-        signals = list(await db_fresh.signals.find({}).to_list(50))
         
         # Cleanup
         for signal in signals:
             if "_id" in signal:
                 del signal["_id"]
         
-        print(f"📊 FRESH API returning {len(signals)} signals")
+        print(f"📊 API returning {len(signals)} live signals")
         if signals:
             print(f"    First signal: {signals[0].get('underlying')} SL:{signals[0].get('sl')} TP:{signals[0].get('tp')}")
         
-        client_fresh.close()
         return signals
         
     except Exception as e:
