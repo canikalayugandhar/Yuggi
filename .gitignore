@@ -98,3 +98,7 @@ android-sdk/ -e
 *.env
 *.env.*
 trinity_scanner_desktop.zip
+-e 
+# Environment files
+*.env
+*.env.*
