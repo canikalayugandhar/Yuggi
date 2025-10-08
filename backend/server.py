@@ -827,31 +827,21 @@ async def get_scanner_status():
 
 @api_router.get("/scanner/signals")
 async def get_signals():
-    """Get recent signals - SIMPLE AND DIRECT"""
+    """Get recent signals - FASTEST POSSIBLE"""
     try:
-        # Direct database query - no complex processing
-        signals = await db.signals.find({}).to_list(100)
+        # Get signals from database - minimal processing
+        signals = list(await db.signals.find({}).to_list(50))
         
-        # Simple cleanup for JSON
-        result = []
+        # Ultra-simple cleanup
         for signal in signals:
-            # Remove MongoDB _id
             if "_id" in signal:
                 del signal["_id"]
-            
-            # Simple datetime handling - convert to string if needed
-            for field in ["signal_time", "created_at", "hit_time"]:
-                if field in signal and hasattr(signal[field], 'isoformat'):
-                    signal[field] = signal[field].isoformat()
-            
-            result.append(signal)
         
-        logging.info(f"📊 Returning {len(result)} signals to frontend")
-        return result
+        print(f"📊 API returning {len(signals)} signals")
+        return signals
         
     except Exception as e:
-        logging.error(f"❌ Error getting signals: {e}")
-        # Return empty list on any error
+        print(f"❌ API Error: {e}")
         return []
 
 @api_router.get("/scanner/options")
