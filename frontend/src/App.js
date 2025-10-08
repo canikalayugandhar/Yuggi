@@ -563,13 +563,30 @@ function App() {
               </Button>
               
               <Button
-                onClick={loadScannerStatus}
+                onClick={() => {
+                  loadScannerStatus();
+                  loadRecentSignals();
+                  loadCurrentOptions();
+                }}
                 variant="outline"
                 size="sm"
                 disabled={loading}
-                title="Refresh Status"
+                title="Refresh All Data"
               >
                 <Activity className="w-4 h-4" />
+              </Button>
+              
+              <Button
+                onClick={() => {
+                  const stats = calculateStatsFromSignals(signals);
+                  setScannerStatus(prev => ({ ...prev, stats }));
+                  console.log('🔄 Manual stats refresh:', stats);
+                }}
+                variant="outline"
+                size="sm"
+                title="Refresh Stats"
+              >
+                📊
               </Button>
             </div>
           </div>
