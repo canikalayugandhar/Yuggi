@@ -598,6 +598,25 @@ function App() {
               >
                 📊
               </Button>
+              
+              <Button
+                onClick={() => {
+                  // Force clear all data
+                  setSignals([]);
+                  setScannerStatus(prev => ({
+                    ...prev,
+                    stats: { total: 0, hit: 0, flop: 0, pnl: 0.0 }
+                  }));
+                  setOptions([]);
+                  console.log('🧹 All data cleared manually');
+                }}
+                variant="outline"
+                size="sm"
+                title="Clear All Data"
+                className="text-red-600 hover:text-red-700"
+              >
+                🧹
+              </Button>
             </div>
           </div>
         </div>
