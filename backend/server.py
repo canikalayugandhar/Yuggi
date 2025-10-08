@@ -852,18 +852,25 @@ async def get_signals():
 async def get_current_options():
     """Get current ATM options from database or in-memory"""
     try:
-        # First try to get from database
-        options = await db.options.find().limit(200).to_list(200)
-        
-        if options:
-            logging.info(f"Found {len(options)} options in database")
+        # First try to get from database - fix the query
+        try:
+            options_cursor = db.options.find({})
+            options = await options_cursor.to_list(length=200)
             
-            # Clean up options for JSON serialization
-            for option in options:
-                if "_id" in option:
-                    del option["_id"]
-            
-            return options
+            if options and len(options) > 0:
+                logging.info(f"Found {len(options)} options in database")
+                
+                # Clean up options for JSON serialization
+                for option in options:
+                    if "_id" in option:
+                        del option["_id"]
+                
+                return options
+            else:
+                logging.warning(f"Database query returned {len(options) if options else 0} options")
+        except Exception as e:
+            logging.error(f"Database options query failed: {e}")
+            options = []
         
         # Fallback to in-memory options
         if scanner_state.get("last_options"):
