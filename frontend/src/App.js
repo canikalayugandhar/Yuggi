@@ -90,6 +90,13 @@ function App() {
     loadScannerStatus();
     loadRecentSignals();
     loadCurrentOptions();
+    
+    // 🎯 FORCE STATS UPDATE - Auto-refresh every 10 seconds
+    const statsInterval = setInterval(() => {
+      loadRecentSignals(); // This will recalculate stats
+    }, 10000);
+    
+    return () => clearInterval(statsInterval);
   }, []);
   
   // Reload config when returning to settings tab
